@@ -30,7 +30,7 @@ mesh = SubResource("SphereMesh_p47bc")
 surface_material_override/0 = SubResource("ShaderMaterial_75vfm")
 metadata/_edit_lock_ = true
 
-[node name="StaticBody3D2" type="StaticBody3D" parent="MeshInstance3D" unique_id=1296955096]
+[node name="StaticBody3D2" type="Area3D" parent="MeshInstance3D" unique_id=212031447]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="MeshInstance3D/StaticBody3D2" unique_id=151750376]
 visible = false

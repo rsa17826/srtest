@@ -2,60 +2,67 @@
 extends EditorPlugin
 
 const GRIDMAP_DIR := "res://gridmap/"
-const OUTPUT_NAME := "mesh.tres"
+const SCENE_NAME := "main.tscn"
+const LIB_PATH := "res://gridmap/mesh.tres"
 
 func _apply_changes() -> void:
-  var scene := get_editor_interface().get_edited_scene_root()
-  if not scene or not scene.scene_file_path.begins_with(GRIDMAP_DIR): return
+  var edited := get_editor_interface().get_edited_scene_root()
+  if not edited: return
+  var edited_path := edited.scene_file_path
+  if not edited_path.begins_with(GRIDMAP_DIR) or edited_path.get_file() != SCENE_NAME: return
 
-  var path := scene.scene_file_path.get_base_dir().path_join(OUTPUT_NAME)
+  # reuse the loaded instance so open GridMaps update live and IDs persist
+  var lib: MeshLibrary = load(LIB_PATH) if ResourceLoader.exists(LIB_PATH) else MeshLibrary.new()
 
-  # reuse the loaded instance so open GridMaps pick up the changes
-  var lib: MeshLibrary
-  if ResourceLoader.exists(path):
-    lib = load(path)
-    lib.clear()
-  else:
-    lib = MeshLibrary.new()
+  for folder in DirAccess.get_directories_at(GRIDMAP_DIR):
+    var scene_path := GRIDMAP_DIR.path_join(folder).path_join(SCENE_NAME)
+    if not ResourceLoader.exists(scene_path): continue
 
-  for i in scene.get_child_count():
-    var child: Node3D = scene.get_child(i)
-    lib.create_item(i)
-    lib.set_item_name(i, child.name)
+    if scene_path == edited_path:
+      # the open scene holds the unsaved changes, so read it directly
+      _sync_scene(lib, folder, edited)
+    else:
+      var root: Node = (load(scene_path) as PackedScene).instantiate()
+      _sync_scene(lib, folder, root)
+      root.free()
 
-    if child.scene_file_path:
-      var dir := child.scene_file_path.get_base_dir()
-      var base := child.scene_file_path.get_file().get_basename()
-      var preview_a := dir.path_join(base + "_preview.png")
-      var preview_b := dir.path_join("previews").path_join(base + ".png")
-      if FileAccess.file_exists(preview_a):
-        lib.set_item_preview(i, load(preview_a))
-      elif FileAccess.file_exists(preview_b):
-        lib.set_item_preview(i, load(preview_b))
-
-    var shapes: Array = []
-    _collect(lib, i, child, Transform3D.IDENTITY, shapes)
-    lib.set_item_shapes(i, shapes)
-
-  var err := ResourceSaver.save(lib, path)
+  var err := ResourceSaver.save(lib, LIB_PATH)
   if err != OK:
-    push_error("MeshLibrary save failed (%s): %s" % [path, error_string(err)])
+    push_error("MeshLibrary save failed (%s): %s" % [LIB_PATH, error_string(err)])
     return
-  prints("Saved", lib.get_item_list().size(), "items to", path)
+  prints("Saved", lib.get_item_list().size(), "items to", LIB_PATH)
 
-# xform = this node's transform relative to the item root
-func _collect(lib: MeshLibrary, i: int, node: Node3D, xform: Transform3D, shapes: Array) -> void:
+func _sync_scene(lib: MeshLibrary, folder: String, root: Node) -> void:
+  var count := root.get_child_count()
+  for c in root.get_children():
+    var child: Node3D = c
+    # one tile in the scene = folder name, several = "folder/childname"
+    var item_name := folder if count == 1 else folder + "/" + child.name
+
+    var id := lib.find_item_by_name(item_name)
+    if id == -1:
+      id = lib.get_last_unused_item_id()
+      lib.create_item(id)
+      lib.set_item_name(id, item_name)
+
+    var result := {"mesh": null, "shapes": []}
+    _collect(child, Transform3D.IDENTITY, result)
+    lib.set_item_mesh(id, result.mesh)
+    lib.set_item_shapes(id, result.shapes)
+
+# xform = node transform relative to the tile root
+func _collect(node: Node3D, xform: Transform3D, result: Dictionary) -> void:
   if node is MeshInstance3D:
-    lib.set_item_mesh(i, _bake_mesh(node))
+    result.mesh = _bake_mesh(node)
   elif node is CollisionShape3D:
-    shapes.append(node.shape)
-    shapes.append(xform)
+    result.shapes.append(node.shape)
+    result.shapes.append(xform)
 
   for c in node.get_children():
     if c is Node3D:
-      _collect(lib, i, c, xform * c.transform, shapes)
+      _collect(c, xform * c.transform, result)
 
-# copies the mesh and bakes in whatever material the node actually renders with
+# copy the mesh and bake in the material it actually renders with
 func _bake_mesh(node: MeshInstance3D) -> Mesh:
   var mesh: Mesh = node.mesh.duplicate()
   for s in mesh.get_surface_count():

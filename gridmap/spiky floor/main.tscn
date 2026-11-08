@@ -20,7 +20,7 @@ shader_parameter/height_variation = 1.0
 shader_parameter/pulse_speed = 8.0
 shader_parameter/pulse_amount = 0.10000000475
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_jma0y"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_c2ksa"]
 
 [node name="spiky floor" type="Node3D" unique_id=818926986]
 
@@ -32,5 +32,5 @@ metadata/_edit_lock_ = true
 [node name="StaticBody3D2" type="StaticBody3D" parent="MeshInstance3D" unique_id=1296955096]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="MeshInstance3D/StaticBody3D2" unique_id=151750376]
-shape = SubResource("BoxShape3D_jma0y")
+shape = SubResource("BoxShape3D_c2ksa")
 metadata/_edit_lock_ = true
