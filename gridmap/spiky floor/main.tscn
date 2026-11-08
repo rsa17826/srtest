@@ -7,7 +7,7 @@
 render_priority = 0
 shader = ExtResource("2_6pvfw")
 shader_parameter/base_color = Color(0, 0, 0, 1)
-shader_parameter/glow_color = Color(0.9604184, 0.70957804, 1, 1)
+shader_parameter/glow_color = Color(0.8891746, 0.08335162, 0.9999966, 1)
 shader_parameter/rim_power = 4.0
 shader_parameter/rim_strength = 0.955
 shader_parameter/tip_glow = 1.255

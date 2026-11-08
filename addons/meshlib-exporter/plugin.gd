@@ -1,14 +1,14 @@
 @tool
 extends EditorPlugin
 
-# Variables
 var _can_save := true
 var _extension := ".tres"
 
-# Built-in overrides
 func _apply_changes() -> void:
   var editor := get_editor_interface()
   var scene := editor.get_edited_scene_root()
+  # log.pp("Aasdkasdkkasdksdahkasdk", scene.scene_file_path)
+  # log.pp("Aasdkasdkkasdksdahkasdk", _can_save)
   if not _can_save or not scene or not 'res://gridmap/' in scene.scene_file_path: return
 
   var scene_name := ""
@@ -16,6 +16,7 @@ func _apply_changes() -> void:
 
   scene_name = scene.scene_file_path.split("/")[-2]
   scene_path = scene.scene_file_path
+  # log.pp(editor.get_open_scenes(), scene.scene_file_path, scene_name)
 
   var mesh_lib := MeshLibrary.new()
 
@@ -50,7 +51,6 @@ func _apply_changes() -> void:
   await get_tree().create_timer(1.0).timeout
   _can_save = true
 
-# Private methods
 func _iterate_child(mesh_lib: MeshLibrary, i: int, node: Node):
   if node != null:
     if node is MeshInstance3D:
