@@ -23,15 +23,14 @@ var keys_pressed: Dictionary = {
 }
 var flight_speed_multiplier: float = 1.0
 func _enter_tree() -> void:
-  log.pp("MC Flight Plugin Enabled.")
+  log.pp("3dmove Enabled.")
 
 func _exit_tree() -> void:
-  log.pp("MC Flight Plugin Disabled.")
+  log.pp("3dmove Disabled.")
   if is_flying:
     disable_flight()
 
 func _input(event: InputEvent) -> void:
-  # Toggle shortcut (Z)
   if is_flying and event is InputEventMouseButton and event.pressed:
     if event.button_index == MOUSE_BUTTON_WHEEL_UP:
       flight_speed_multiplier = clamp(flight_speed_multiplier * 1.2, 0.1, 100.0)
@@ -40,7 +39,6 @@ func _input(event: InputEvent) -> void:
     get_viewport().set_input_as_handled()
     log.pp(flight_speed_multiplier)
   if event is InputEventMouseButton:
-  # if event is InputEventKey and event.physical_keycode == KEY_Z and event.pressed and not event.echo:
     var vp = get_editor_interface().get_editor_viewport_3d(0)
     if event.button_mask & MOUSE_BUTTON_RIGHT:
       var target = get_viewport().gui_get_hovered_control()
@@ -56,7 +54,6 @@ func _input(event: InputEvent) -> void:
     else:
       disable_flight()
 
-  # Panic escape shortcut (Escape)
   if is_flying and event is InputEventKey and event.physical_keycode == KEY_ESCAPE and event.pressed:
     disable_flight()
     get_viewport().set_input_as_handled()
@@ -133,7 +130,6 @@ func enable_flight() -> void:
   if not original_cam: return
 
   is_flying = true
-  # print("MC Flight Mode: ON (Press Z or ESC to exit)")
 
   # Configure proxy camera
   custom_cam = Camera3D.new()
@@ -160,7 +156,6 @@ func enable_flight() -> void:
 
 func disable_flight() -> void:
   is_flying = false
-  # print("MC Flight Mode: OFF")
 
   Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
