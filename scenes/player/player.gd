@@ -20,14 +20,10 @@ var replay_frame_index: int = 0
 const DESYNC_THRESHOLD: float = 0.001
 # -------------------------------
 
-func starts_with(x, y):
-  return x.substr(0, len(y)) == y
-func ends_with(x, y):
-  return x.substr(len(x) - len(y)) == y
-
 @onready var grid: GridMap = global.level.gridmap
-@onready var spike_id := grid.mesh_library.find_item_by_name("spiky floor")
+@onready var floor_spike_id := grid.mesh_library.find_item_by_name("spiky floor")
 @onready var playerHeight = $CollisionShape3D.shape.height / 2
+@onready var playerWidth = $CollisionShape3D.shape.radius / 2
 
 func _ready():
   get_window().transparent = true
@@ -144,8 +140,8 @@ func start_replay():
 
 func _physics_process(delta: float) -> void:
   var cell := grid.local_to_map(grid.to_local(global_position - Vector3(0, playerHeight + .01, 0)))
-  log.pp(grid.get_cell_item(cell), spike_id)
-  if grid.get_cell_item(cell) == spike_id:
+  log.pp(grid.get_cell_item(cell), floor_spike_id)
+  if grid.get_cell_item(cell) == floor_spike_id:
     die()
   var has2 = []
   delta = 1 / 60.0
