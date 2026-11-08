@@ -24,22 +24,32 @@ vec2 hash2(vec2 p) {
 }
 
 // height of the spike field at a point on the surface plane
-float field(vec2 uv) {
+// returns vec3(height, dh/du, dh/dv) in world units; requires spike_width < 0.5
+vec3 field(vec2 uv) {
   vec2 p = uv * spike_density;
-  vec2 ip = floor(p);
-  float h = 0.0;
-  for (int y = -1; y <= 1; y++) {
-    for (int x = -1; x <= 1; x++) {
-      vec2 c = ip + vec2(float(x), float(y));
+  vec2 base = floor(p - spike_width);
+  vec3 best = vec3(0.0);
+  for (int y = 0; y < 2; y++) {
+    for (int x = 0; x < 2; x++) {
+      vec2 c = base + vec2(float(x), float(y));
       vec2 r = hash2(c);
       vec2 pt = c + 0.5 + (r - 0.5) * jitter;
-      float cone = pow(clamp(1.0 - distance(p, pt) / spike_width, 0.0, 1.0), spike_sharpness);
+      vec2 v = p - pt;
+      float dist = length(v);
+      if (dist >= spike_width) continue;   // skips the expensive math for most cells
+
+      float k = 1.0 - dist / spike_width;
       float pulse = 1.0 + pulse_amount * sin(TIME * pulse_speed + r.x * 6.2831);
-      float scale = 1.0 - height_variation * r.y;
-      h = max(h, cone * pulse * scale);   // max keeps it continuous between cells
+      float amp = pulse * (1.0 - height_variation * r.y) * spike_height;
+      float h = pow(k, spike_sharpness) * amp;
+      if (h > best.x) {
+        vec2 g = -spike_sharpness * pow(k, spike_sharpness - 1.0) / spike_width
+          * (v / max(dist, 1e-5)) * amp;
+        best = vec3(h, g * spike_density);
+      }
     }
   }
-  return h * spike_height;
+  return best;
 }
 
 void vertex() {
@@ -47,7 +57,6 @@ void vertex() {
   vec3 wn = normalize((MODEL_MATRIX * vec4(NORMAL, 0.0)).xyz);
   vec3 an = abs(wn);
 
-  // pick the surface plane axes from the dominant normal axis
   vec3 a;
   vec3 b;
   if (an.y > an.x && an.y > an.z) {
@@ -62,15 +71,10 @@ void vertex() {
   }
   vec2 uv = vec2(dot(wp, a), dot(wp, b));
 
-  float e = 0.01;
-  float h = field(uv);
-  float hu = (field(uv + vec2(e, 0.0)) - h) / e;
-  float hv = (field(uv + vec2(0.0, e)) - h) / e;
-
-  VERTEX += NORMAL * h;
-  // surface is a heightfield along the face normal, so normal = n - dh/du*a - dh/dv*b
-  NORMAL = normalize(wn - hu * a - hv * b);
-  tip = clamp(h / spike_height, 0.0, 1.0);
+  vec3 f = field(uv);
+  VERTEX += NORMAL * f.x;
+  NORMAL = normalize(wn - f.y * a - f.z * b);
+  tip = clamp(f.x / spike_height, 0.0, 1.0);
 }
 
 void fragment() {

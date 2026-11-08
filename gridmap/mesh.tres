@@ -2,6 +2,7 @@
 
 [ext_resource type="Shader" uid="uid://cauwhkcmtwcy6" path="res://shaders/main.gdshader" id="1_b5ih1"]
 [ext_resource type="Shader" uid="uid://bf28n0ll6cxyg" path="res://shaders/spiky.gdshader" id="2_88ns5"]
+[ext_resource type="Shader" uid="uid://bpnhxqtcofqqf" path="res://shaders/spiky-floor.gdshader" id="3_5c8e7"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_dh7de"]
 render_priority = 0
@@ -24,7 +25,7 @@ shader_parameter/spike_speed = 1.0
 shader_parameter/spike_pulse = 0.5
 shader_parameter/spike_randomness = 0.5
 
-[sub_resource type="BoxMesh" id="BoxMesh_wkalw"]
+[sub_resource type="BoxMesh" id="BoxMesh_b5ih1"]
 material = SubResource("ShaderMaterial_dh7de")
 subdivide_width = 32
 subdivide_height = 32
@@ -49,25 +50,71 @@ shader_parameter/pulse_speed = 5.855
 shader_parameter/pulse_amount = 0.4
 shader_parameter/breathe_amount = 0.08
 
-[sub_resource type="SphereMesh" id="SphereMesh_b5ih1"]
+[sub_resource type="SphereMesh" id="SphereMesh_88ns5"]
 material = SubResource("ShaderMaterial_75vfm")
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_lvxji"]
 
-[sub_resource type="BoxMesh" id="BoxMesh_88ns5"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_7uph4"]
+render_priority = 0
+shader = ExtResource("3_5c8e7")
+shader_parameter/base_color = Color(0.3705979, 0.0003571783, 0.4499616, 1)
+shader_parameter/glow_color = Color(0.22824928, 8.700837e-05, 0.26187387, 1)
+shader_parameter/rim_power = 4.0
+shader_parameter/rim_strength = 0.3
+shader_parameter/tip_glow = 999.0
+shader_parameter/spike_density = 9.58
+shader_parameter/spike_width = 0.265
+shader_parameter/spike_height = 0.98
+shader_parameter/spike_sharpness = 5.095
+shader_parameter/jitter = 0.8
+shader_parameter/height_variation = 1.0
+shader_parameter/pulse_speed = 8.0
+shader_parameter/pulse_amount = 0.10000000475
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_5c8e7"]
+material = SubResource("ShaderMaterial_7uph4")
 subdivide_width = 32
-subdivide_height = 32
 subdivide_depth = 32
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_c2ksa"]
 
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_4oiww"]
+render_priority = 0
+shader = ExtResource("3_5c8e7")
+shader_parameter/base_color = Color(0.3705979, 0.0003571783, 0.4499616, 1)
+shader_parameter/glow_color = Color(0.22824928, 8.700837e-05, 0.26187387, 1)
+shader_parameter/rim_power = 4.0
+shader_parameter/rim_strength = 0.3
+shader_parameter/tip_glow = 999.0
+shader_parameter/spike_density = 9.58
+shader_parameter/spike_width = 0.265
+shader_parameter/spike_height = 0.98
+shader_parameter/spike_sharpness = 5.095
+shader_parameter/jitter = 0.8
+shader_parameter/height_variation = 1.0
+shader_parameter/pulse_speed = 8.0
+shader_parameter/pulse_amount = 0.10000000475
+
+[sub_resource type="BoxMesh" id="BoxMesh_utu7k"]
+material = SubResource("ShaderMaterial_4oiww")
+subdivide_width = 32
+subdivide_height = 32
+subdivide_depth = 32
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_3vsbx"]
+
 [resource]
 item/0/name = "basic"
-item/0/mesh = SubResource("BoxMesh_wkalw")
+item/0/mesh = SubResource("BoxMesh_b5ih1")
 item/0/shapes = [SubResource("BoxShape3D_jma0y"), Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)]
 item/1/name = "spiky ball"
-item/1/mesh = SubResource("SphereMesh_b5ih1")
+item/1/mesh = SubResource("SphereMesh_88ns5")
 item/1/shapes = [SubResource("SphereShape3D_lvxji"), Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)]
 item/2/name = "spiky floor"
-item/2/mesh = SubResource("BoxMesh_88ns5")
+item/2/mesh = SubResource("PlaneMesh_5c8e7")
+item/2/mesh_cast_shadow = 0
 item/2/shapes = [SubResource("BoxShape3D_c2ksa"), Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)]
+item/3/name = "spiky box"
+item/3/mesh = SubResource("BoxMesh_utu7k")
+item/3/shapes = [SubResource("BoxShape3D_3vsbx"), Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)]
