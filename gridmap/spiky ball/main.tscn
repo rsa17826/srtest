@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://b8xh3rs6r40rj"]
 
-[ext_resource type="Shader" path="res://spiky.gdshader" id="1_edkaw"]
+[ext_resource type="Shader" uid="uid://bf28n0ll6cxyg" path="res://shaders/spiky.gdshader" id="1_edkaw"]
 
 [sub_resource type="SphereMesh" id="SphereMesh_p47bc"]
 

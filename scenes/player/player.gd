@@ -75,7 +75,7 @@ func _unhandled_input(event):
 
 func dojump():
   velocity.y = currentUserJumpHeight
-  currentUserMoveSpeed += 3
+  currentUserMoveSpeed += 5
   unpress("jump")
   jumps -= 1
 
