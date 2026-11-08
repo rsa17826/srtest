@@ -1,4 +1,9 @@
 extends Node3D
+class_name Level
+
+@export var gridmap: GridMap
+func _init() -> void:
+  global.level = self
 
 func _ready() -> void:
   var sky_mat := ProceduralSkyMaterial.new()

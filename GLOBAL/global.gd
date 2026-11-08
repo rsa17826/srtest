@@ -598,3 +598,4 @@ func clearLow(v):
 # local game only data
 func localReady(): pass
 func localProcess(delta: float): pass
+var level: Level

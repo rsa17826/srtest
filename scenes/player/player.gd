@@ -25,6 +25,10 @@ func starts_with(x, y):
 func ends_with(x, y):
   return x.substr(len(x) - len(y)) == y
 
+@onready var grid: GridMap = global.level.gridmap
+@onready var spike_id := grid.mesh_library.find_item_by_name("spiky floor")
+@onready var playerHeight = $CollisionShape3D.shape.height / 2
+
 func _ready():
   get_window().transparent = true
   get_window().borderless = true
@@ -59,10 +63,15 @@ func _input(event):
     $fake_cam.rotation = $cam.rotation
     $fake_cam.rotation.x = 0
 
+@onready var startPos = position
+
+func die():
+  position = startPos
+  velocity = Vector3.ZERO
+
 func _unhandled_input(event):
   if event.is_action_pressed("restart"):
-    position = Vector3.ZERO
-    velocity = Vector3.ZERO
+    die()
   # if event.is_action_pressed("ui_focus_next"):
   #   if current_mode == ReplayMode.NORMAL:
   #     position = Vector3.ZERO
@@ -134,6 +143,10 @@ func start_replay():
   log.pp("--- REPLAY STARTED ---")
 
 func _physics_process(delta: float) -> void:
+  var cell := grid.local_to_map(grid.to_local(global_position - Vector3(0, playerHeight + .01, 0)))
+  log.pp(grid.get_cell_item(cell), spike_id)
+  if grid.get_cell_item(cell) == spike_id:
+    die()
   var has2 = []
   delta = 1 / 60.0
   var playback_delta = delta

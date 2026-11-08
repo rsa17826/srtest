@@ -12,7 +12,7 @@ radius = 0.3
 [node name="player" type="CharacterBody3D" unique_id=1157404720 groups=["player"]]
 script = ExtResource("1_3f8nb")
 
-[node name="CollisionShape3D2" type="CollisionShape3D" parent="." unique_id=995694595]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=995694595]
 shape = SubResource("CylinderShape3D_hwthb")
 
 [node name="cam" type="Camera3D" parent="." unique_id=422323617]
