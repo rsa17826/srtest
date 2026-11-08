@@ -1,6 +1,6 @@
 extends CharacterBody3D
 
-const USER_MOVE_SPEED = 9.5
+const USER_MOVE_SPEED = 8.5
 const JUMP_VEL = 10.5
 var MAX_JUMPS = 1
 const MAX_KT = 5
@@ -21,14 +21,27 @@ const DESYNC_THRESHOLD: float = 0.001
 # -------------------------------
 
 @onready var grid: GridMap = global.level.gridmap
-@onready var floor_spike_id := grid.mesh_library.find_item_by_name("spiky floor")
+@onready var hazard_ids := [
+  grid.mesh_library.find_item_by_name("spiky floor"),
+  grid.mesh_library.find_item_by_name("spiky ball"),
+]
 @onready var playerHeight = $CollisionShape3D.shape.height / 2
 @onready var playerWidth = $CollisionShape3D.shape.radius / 2
 
 func _ready():
+  assert(not -1 in hazard_ids, "hazard tile name missing from mesh library")
   get_window().transparent = true
   get_window().borderless = true
   get_window().mode = Window.MODE_MAXIMIZED
+
+func touching_hazard() -> bool:
+  for i in get_slide_collision_count():
+    var col := get_slide_collision(i)
+    if col.get_collider() != grid: continue
+    # step a little *into* the surface so the point lands in the tile we hit
+    var cell := grid.local_to_map(grid.to_local(col.get_position() - col.get_normal() * 0.05))
+    if grid.get_cell_item(cell) in hazard_ids: return true
+  return false
 
 var jumps := 0
 var kt: float = MAX_KT
@@ -139,10 +152,7 @@ func start_replay():
   log.pp("--- REPLAY STARTED ---")
 
 func _physics_process(delta: float) -> void:
-  var cell := grid.local_to_map(grid.to_local(global_position - Vector3(0, playerHeight + .01, 0)))
-  # log.pp(grid.get_cell_item(cell), floor_spike_id)
-  if grid.get_cell_item(cell) == floor_spike_id:
-    die()
+  # var cell := grid.local_to_map(grid.to_local(global_position - Vector3(0, playerHeight + .01, 0)))
   var has2 = []
   delta = 1 / 60.0
   var playback_delta = delta
@@ -224,6 +234,9 @@ func _physics_process(delta: float) -> void:
 
   # --- 5. EXECUTE MOVEMENT ---
   move_and_slide()
+  if touching_hazard():
+    die()
+    return
   if is_on_wall():
     currentUserMoveSpeed = USER_MOVE_SPEED
   # TODO
