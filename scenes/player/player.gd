@@ -1,7 +1,8 @@
 extends CharacterBody3D
 
-const USER_MOVE_SPEED = 8.5
-const JUMP_VEL = 10.5
+const USER_MOVE_SPEED = 3.5
+const JUMP_SPEED_BOOST = 1.5
+const JUMP_VEL = 10.4
 var MAX_JUMPS = 1
 const MAX_KT = 5
 var MOUSE_SENSITIVITY: float = 0.009
@@ -51,8 +52,8 @@ var trypress = {
 }
 func pressed(key):
   return !!trypress[key]
-func unpress(key):
-  trypress[key] = 0
+func unpress(key): return
+  # trypress[key] = 0
 func press(key):
   trypress[key] = KEY_MAX_BUFFER
 
@@ -76,7 +77,8 @@ func _input(event):
 
 func die():
   position = startPos
-  velocity = Vector3.ZERO
+  velocity = Vector3(0, -9999, 0)
+  self.set_deferred("velocity", Vector3(0, -9999, 0))
 
 func _unhandled_input(event):
   if event.is_action_pressed("restart"):
@@ -93,14 +95,14 @@ func _unhandled_input(event):
 
 func dojump():
   velocity.y = currentUserJumpHeight
-  currentUserMoveSpeed += 5
+  currentUserMoveSpeed += JUMP_SPEED_BOOST
   unpress("jump")
   jumps -= 1
 
 func updatetrypress(has2: Array, delta):
   for thing in trypress.keys():
-    if trypress[thing] > 0:
-      trypress[thing] -= 60 * delta
+    # if trypress[thing] > 0:
+    #   trypress[thing] -= 60 * delta
     if thing in has2:
       if Input.is_action_just_pressed(thing) or Input.is_action_just_pressed(thing + '2'):
         trypress[thing] = KEY_MAX_BUFFER
