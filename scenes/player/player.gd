@@ -140,7 +140,7 @@ func start_replay():
 
 func _physics_process(delta: float) -> void:
   var cell := grid.local_to_map(grid.to_local(global_position - Vector3(0, playerHeight + .01, 0)))
-  log.pp(grid.get_cell_item(cell), floor_spike_id)
+  # log.pp(grid.get_cell_item(cell), floor_spike_id)
   if grid.get_cell_item(cell) == floor_spike_id:
     die()
   var has2 = []
