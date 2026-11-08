@@ -1,0 +1,6 @@
+[gd_resource type="BoxMesh" format=3 uid="uid://dsrp6m0v620ys"]
+
+[resource]
+subdivide_width = 32
+subdivide_height = 32
+subdivide_depth = 32
