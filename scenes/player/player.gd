@@ -97,6 +97,7 @@ func die():
   end_win()
   position = startPos
   velocity = Vector3.ZERO
+  start_recording()
 
 func _unhandled_input(event):
   if current_mode == ReplayMode.VIEWING: return
@@ -107,7 +108,7 @@ func _unhandled_input(event):
   #     position = Vector3.ZERO
   #     velocity = Vector3.ZERO
   #   elif current_mode == ReplayMode.RECORDING:
-  #     stop_recording()
+  #
   # if event.is_action_pressed("ui_accept") and current_mode == ReplayMode.NORMAL:
   #   start_replay()
 
@@ -345,6 +346,7 @@ func win(goal: Area3D) -> void:
   win_fx.transform = Transform3D(grid.get_cell_item_basis(win_cell), grid.map_to_local(win_cell)) \
       * lib.get_item_mesh_transform(win_item)
   grid.set_cell_item(win_cell, GridMap.INVALID_CELL_ITEM) # hide the shared cell, the copy replaces it
+  stop_recording()
 
 func end_win() -> void:
   winning = false
