@@ -36,7 +36,6 @@ func _sync_scene(lib: MeshLibrary, folder: String, root: Node) -> void:
   var count := root.get_child_count()
   for c in root.get_children():
     var child: Node3D = c
-    # one tile in the scene = folder name, several = "folder/childname"
     var item_name := folder if count == 1 else folder + "/" + child.name
 
     var id := lib.find_item_by_name(item_name)
@@ -45,13 +44,14 @@ func _sync_scene(lib: MeshLibrary, folder: String, root: Node) -> void:
       lib.create_item(id)
       lib.set_item_name(id, item_name)
 
-    var result := {"mesh": null, "shapes": []}
+    var result := {"mesh": null, "mesh_transform": Transform3D.IDENTITY, "cast_shadow": 0, "shapes": []}
     _collect(child, child.transform, result)
     lib.set_item_mesh(id, result.mesh)
+    lib.set_item_mesh_transform(id, result.mesh_transform)
+    lib.set_item_navigation_mesh_transform(id, result.mesh_transform)
     lib.set_item_mesh_cast_shadow(id, result.cast_shadow)
     lib.set_item_shapes(id, result.shapes)
 
-# xform = node transform relative to the tile root
 func _collect(node: Node3D, xform: Transform3D, result: Dictionary) -> void:
   if node is MeshInstance3D:
     result.mesh = _bake_mesh(node)

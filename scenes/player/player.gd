@@ -239,6 +239,8 @@ func _physics_process(delta: float) -> void:
   if touching_hazard():
     die()
     return
+  var id := grid.mesh_library.find_item_by_name("goal")
+  print(grid.mesh_library.resource_path, " ", grid.mesh_library.get_item_mesh_transform(id))
   if is_on_wall():
     currentUserMoveSpeed = USER_MOVE_SPEED
   # TODO

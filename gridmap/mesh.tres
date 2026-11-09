@@ -159,5 +159,7 @@ item/3/mesh = SubResource("BoxMesh_3vsbx")
 item/3/shapes = [SubResource("BoxShape3D_wrdqp"), Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)]
 item/4/name = "goal"
 item/4/mesh = SubResource("CylinderMesh_j3noi")
+item/4/mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10, 0)
 item/4/mesh_cast_shadow = 0
 item/4/shapes = [SubResource("CylinderShape3D_88ns5"), Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10, 0)]
+item/4/navigation_mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10, 0)
