@@ -66,10 +66,8 @@ func _go_menu() -> void:
 
 func _build_ui() -> void:
   panel = PanelContainer.new()
-  var style := StyleBoxFlat.new()
-  style.bg_color = Color(0.07, 0.07, 0.09, 0.92)
-  style.set_content_margin_all(4)
-  panel.add_theme_stylebox_override("panel", style)
+  panel.theme = SystemUI.theme()
+  SystemUI.add_brackets(panel)
   panel.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
   panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
   add_child(panel)
@@ -100,6 +98,7 @@ func _build_ui() -> void:
   info = Label.new()
   info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
   info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+  info.add_theme_color_override("font_color", SystemUI.CYAN)
   row.add_child(info)
 
   btn_close = _make_button("Close", row, close)
