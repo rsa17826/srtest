@@ -26,7 +26,6 @@ var saved_cam_rot: Vector3
 var saved_mouse_mode: Input.MouseMode
 var saved_state := {}
 var first_diverge := -1 # first frame where the resimulation leaves the recorded path
-const DIVERGE_EPS := 0.01
 
 # checkpoints (level.checkpoints = [{"area": Area3D, "pane": MeshInstance3D}, ...])
 var cps: Array
@@ -315,7 +314,6 @@ func _simulate(buf: Array) -> void:
     positions[i] = player.global_position
     player.trypress.jump = f.trypress_jump
     player.step(f.delta, f.input_dir)
-    # log.pp(player.global_position.distance_to(f.expected_end_position), i)
     if first_diverge == -1 and player.global_position.distance_to(f.expected_end_position) > 0:
       log.pp(player.global_position.distance_to(f.expected_end_position), i)
       log.pp(lastf, f)
