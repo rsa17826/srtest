@@ -6,6 +6,7 @@ extends EditorPlugin
 #  - if the ray hits no block it lands on a work plane (the "layer"), so no scrolling floors
 #  - ghost tile + cell outline + fading grid show exactly what will be placed and where
 
+const DEBUG := false # true = print why a click was ignored
 const MAX_RAY_CELLS := 256
 const MAX_PLANE_DIST := 1000.0
 const PLANE_RADIUS := 10.0
@@ -56,8 +57,8 @@ var item_list: ItemList
 
 var selected_item := GridMap.INVALID_CELL_ITEM
 var rotation_index := 0
-var level := 0 # work-plane layer (cell y) used when the ray hits no block
-var drag_y := 0 # layer locked while drag-painting
+var level := 0   # work-plane layer (cell y) used when the ray hits no block
+var drag_y := 0  # layer locked while drag-painting
 
 var target_cell := Vector3i.ZERO
 var has_target := false
@@ -68,6 +69,7 @@ var stroke := {} # cell -> [old_item, old_orientation] for the current drag
 var last_mouse := Vector2.ZERO
 
 func _enter_tree() -> void:
+  set_process_input(true)
   cube_lines = _make_cube_lines()
 
   plane_mesh = PlaneMesh.new()
@@ -251,7 +253,8 @@ func _refresh_layer_label() -> void:
 # Needs Godot 4.3+ (Viewport.gui_get_hovered_control).
 
 func _input(event: InputEvent) -> void:
-  if grid == null or not enabled_check.button_pressed: return
+  if grid == null or not enabled_check.button_pressed:
+    return
 
   # a click we consumed must also have its release consumed, even outside the viewport
   if click_held and event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
@@ -262,8 +265,14 @@ func _input(event: InputEvent) -> void:
     _consume()
     return
 
-  var vp := _hovered_viewport()
+  # note: during _input the main viewport's own mouse position is one event stale,
+  # so mouse events use event.position directly
+  var pos: Vector2 = event.position if event is InputEventMouse else get_viewport().get_mouse_position()
+  var vp := _hovered_viewport(pos)
   if vp == null:
+    if DEBUG and event is InputEventMouseButton and event.pressed:
+      var h := get_viewport().gui_get_hovered_control()
+      print("gridmap_placer: click not over a 3D viewport, hovered = ", str(h.get_path()) if h else "null", " pos = ", pos)
     if has_target:
       has_target = false
       _update_visuals()
@@ -288,7 +297,8 @@ func _input(event: InputEvent) -> void:
     click_held = true
     _consume() # always, otherwise the built-in tool places its own block
     _update_target(camera)
-    if not has_target: return
+    if not has_target:
+      return
     if not erasing and selected_item == GridMap.INVALID_CELL_ITEM:
       push_warning("gridmap_placer: no tile selected in the palette")
       return
@@ -301,9 +311,11 @@ func _input(event: InputEvent) -> void:
     return
 
   if event is InputEventKey and event.pressed and not event.echo:
-    if event.ctrl_pressed or event.alt_pressed or event.meta_pressed: return
+    if event.ctrl_pressed or event.alt_pressed or event.meta_pressed:
+      return
     var focus := get_viewport().gui_get_focus_owner()
-    if focus is LineEdit or focus is TextEdit: return
+    if focus is LineEdit or focus is TextEdit:
+      return
     match event.keycode:
       KEY_BRACKETLEFT:
         _cycle_item(-1)
@@ -317,20 +329,33 @@ func _input(event: InputEvent) -> void:
       KEY_PAGEDOWN:
         level -= 1
         _refresh_layer_label()
-      _: return
+      _:
+        return
     _update_target(camera)
     _consume()
 
 func _consume() -> void:
   get_viewport().set_input_as_handled()
 
-# the 3D viewport whose container is directly under the mouse (not a toolbar button on top of it)
-func _hovered_viewport() -> SubViewport:
+# The 3D viewport under pos, or null. Geometry based: the editor draws a transparent overlay
+# control on top of the SubViewportContainer, so the hovered control is never the container.
+# Toolbar/menu widgets inside the viewport are deeper in the tree than that overlay, so they
+# are excluded and keep working.
+func _hovered_viewport(pos: Vector2) -> SubViewport:
   var hovered := get_viewport().gui_get_hovered_control()
   for i in 4:
     var vp := EditorInterface.get_editor_viewport_3d(i)
-    if vp.get_parent() == hovered:
-      return vp
+    var container := vp.get_parent() as Control
+    if not container.is_visible_in_tree():
+      continue
+    if not container.get_global_rect().has_point(pos):
+      continue
+    var root := container.get_parent()
+    var over_widget := hovered != null and hovered != container \
+        and hovered.get_parent() != root and hovered.get_parent() != container
+    if over_widget:
+      return null
+    return vp
   return null
 
 # ---------------------------------------------------------------- targeting
@@ -399,7 +424,7 @@ func _march(o: Vector3, d: Vector3) -> Dictionary:
     t_max[axis] += t_delta[axis]
     if grid.get_cell_item(cell) != GridMap.INVALID_CELL_ITEM:
       var normal := Vector3i.ZERO
-      normal[axis] = - step[axis]
+      normal[axis] = -step[axis]
       return {"t": t, "cell": cell, "normal": normal}
   return {}
 
@@ -410,7 +435,8 @@ func _update_visuals() -> void:
   ghost.visible = show and not erasing and selected_item != GridMap.INVALID_CELL_ITEM
   outline.visible = show
   plane.visible = show
-  if not show: return
+  if not show:
+    return
 
   var cs := grid.cell_size
   outline.material_override = erase_line_mat if erasing else place_line_mat
@@ -433,14 +459,16 @@ func _apply(cell: Vector3i) -> void:
   var orient := 0 if erasing else _orientation()
   var old_item := grid.get_cell_item(cell)
   var old_orient := grid.get_cell_item_orientation(cell)
-  if old_item == item and (erasing or old_orient == orient): return
+  if old_item == item and (erasing or old_orient == orient):
+    return
   if not stroke.has(cell):
     stroke[cell] = [old_item, old_orient]
   grid.set_cell_item(cell, item, orient)
 
 # the stroke is already applied live; this only records one undo step for the whole drag
 func _commit_stroke() -> void:
-  if stroke.is_empty(): return
+  if stroke.is_empty():
+    return
   var ur := get_undo_redo()
   ur.create_action("Erase tiles" if erasing else "Place tiles", UndoRedo.MERGE_DISABLE, grid)
   for cell in stroke:
