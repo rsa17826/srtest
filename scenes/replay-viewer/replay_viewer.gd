@@ -177,6 +177,14 @@ func open() -> void:
 func close() -> void:
   if flying:
     _stop_flight()
+  if len(cps) != len(saved_cp):
+    cps = global.level.checkpoints
+    saved_cp.clear()
+    cp_state.clear()
+    for cp in cps:
+      saved_cp.append(cp.pane.get_instance_shader_parameter("collected"))
+      cp.pane.set_instance_shader_parameter("collected", 0.0) # viewer drives them from here
+      cp_state.append(false)
   playing = false
   btn_play.text = "Play"
   active = false
