@@ -33,6 +33,7 @@ enum ReplayMode {NORMAL, RECORDING, REPLAYING, VIEWING}
 var current_mode = ReplayMode.NORMAL
 var replay_buffer: Array = []
 var replay_frame_index: int = 0
+var pending_restart := false # restart pressed since the last recorded frame
 const DESYNC_THRESHOLD: float = 0.001
 # -------------------------------
 func _init() -> void:
@@ -111,13 +112,16 @@ func fullReset():
 func _unhandled_input(event):
   if current_mode == ReplayMode.VIEWING: return
   if event.is_action_pressed("restart"):
+    if current_mode == ReplayMode.RECORDING:
+      pending_restart = true
     die()
   # if event.is_action_pressed("ui_focus_next"):
   #   if current_mode == ReplayMode.NORMAL:
   #     position = Vector3.ZERO
   #     velocity = Vector3.ZERO
+  #     start_recording()
   #   elif current_mode == ReplayMode.RECORDING:
-  #
+  #     stop_recording()
   # if event.is_action_pressed("ui_accept") and current_mode == ReplayMode.NORMAL:
   #   start_replay()
 
@@ -152,6 +156,7 @@ func updatetrypress(has2: Array, delta):
 
 func start_recording():
   replay_buffer.clear()
+  pending_restart = false
   replay_frame_index = 0
   current_mode = ReplayMode.RECORDING
   log.pp("--- RECORDING STARTED ---")
@@ -188,13 +193,13 @@ func start_replay():
 
 func _physics_process(delta: float) -> void:
   delta = 1 / 60.0
-  var playback_delta = delta
+  var input_dir := Vector2.ZERO
   if current_mode == ReplayMode.VIEWING: return # first line, before `if winning:`
   if winning:
     winTimer += delta
     win_fade = global.rerange(winTimer, 0, 1, 0, 8)
     if current_mode == ReplayMode.RECORDING:
-      record_frame(playback_delta)
+      record_frame(delta, input_dir)
     if winTimer >= 1:
       stop_recording()
       end_win()
@@ -204,7 +209,6 @@ func _physics_process(delta: float) -> void:
     win_mat.set_shader_parameter("spin_offset", win_spin)
     global_position.y = win_startY + global.rerange_clamp(winTimer, 0, 1, 0, 10)
     return
-  # var cell := grid.local_to_map(grid.to_local(global_position - Vector3(0, playerHeight + .01, 0)))
   var has2 = []
 
   # --- 1. STATE RESTORATION OR INPUT UPDATE ---
@@ -214,7 +218,7 @@ func _physics_process(delta: float) -> void:
       return
 
     var data = replay_buffer[replay_frame_index]
-    playback_delta = data.delta
+    delta = data.delta
 
     global_transform.origin = data.start_position
     velocity = data.velocity
@@ -225,25 +229,39 @@ func _physics_process(delta: float) -> void:
     trypress.jump = data.trypress_jump # Injected directly from history
     $cam.rotation = data.cam_rotation
     $fake_cam.rotation = data.fake_cam_rotation
+    input_dir = data.input_dir
   else:
     # Process physical keyboard/mouse input states for NORMAL and RECORDING modes
-    updatetrypress(has2, playback_delta)
+    updatetrypress(has2, delta)
+    input_dir = Input.get_vector("left", "right", "forward", "back")
 
-  # --- 2. SNAPSHOT INITIAL VARIABLES ---
-  # We record the frame data AFTER inputs update, but BEFORE movement math alters them.
+  # --- 2. SNAPSHOT: after inputs update, before movement math alters anything ---
   if current_mode == ReplayMode.RECORDING:
-    record_frame(playback_delta)
+    record_frame(delta, input_dir)
 
-  # --- 3. STANDARD MOVEMENT CALCULATIONS ---
+  # --- 3. MOVEMENT (shared with the replay viewer's resimulation) ---
+  step(delta, input_dir)
+
+  # --- 4. POST-FRAME ---
+  if current_mode == ReplayMode.RECORDING:
+    replay_buffer[replay_frame_index].expected_end_position = global_transform.origin
+    replay_frame_index += 1 # also runs on a hazard death, so frames stay aligned
+  elif current_mode == ReplayMode.REPLAYING:
+    check_desync(replay_frame_index)
+    replay_frame_index += 1
+
+# One fixed physics step. Everything it depends on is either player state or an argument
+# (input_dir, trypress.jump, $fake_cam rotation), so ReplayViewer can re-run it from recorded inputs.
+func step(delta: float, input_dir: Vector2) -> void:
   if is_on_floor():
     kt = MAX_KT
     jumps = MAX_JUMPS
     velocity.y = 0
   else:
     var gravity = downgravity if velocity.y < 0 else upgravity
-    velocity.y -= gravity * playback_delta
+    velocity.y -= gravity * delta
     if kt > 0:
-      kt -= 60 * playback_delta
+      kt -= 60 * delta
     if jumps == MAX_JUMPS and kt <= 0:
       jumps = MAX_JUMPS - 1
 
@@ -261,15 +279,6 @@ func _physics_process(delta: float) -> void:
     else:
       currentUserJumpHeight = 0
 
-  # --- 4. INPUT DIRECTION MATCHING ---
-  var input_dir := Vector2.ZERO
-  if current_mode == ReplayMode.REPLAYING:
-    input_dir = replay_buffer[replay_frame_index].input_dir
-  else:
-    input_dir = Input.get_vector("left", "right", "forward", "back")
-    if current_mode == ReplayMode.RECORDING:
-      replay_buffer[replay_frame_index].input_dir = input_dir
-
   var movedir = Vector3(input_dir.x, 0, input_dir.y)
   var camdir = $fake_cam.transform.basis
   var direction = (camdir * movedir).normalized()
@@ -282,32 +291,20 @@ func _physics_process(delta: float) -> void:
     velocity.z = move_toward(velocity.z, 0, currentUserMoveSpeed / 5)
     currentUserMoveSpeed = USER_MOVE_SPEED
 
-  # --- 5. EXECUTE MOVEMENT ---
   move_and_slide()
   if touching_hazard():
-    if current_mode == ReplayMode.RECORDING:
-      replay_buffer[replay_frame_index].expected_end_position = global_transform.origin
-      replay_frame_index += 1
     die()
     return
 
   if is_on_wall():
     currentUserMoveSpeed = USER_MOVE_SPEED
-  # TODO
-  # clear speed when vel sign changes
-  # --- 6. EVALUATE / POST-FRAME LOGIC ---
-  if current_mode == ReplayMode.RECORDING:
-    replay_buffer[replay_frame_index].expected_end_position = global_transform.origin
-    replay_frame_index += 1
-  elif current_mode == ReplayMode.REPLAYING:
-    check_desync(replay_frame_index)
-    replay_frame_index += 1
 
-func record_frame(delta: float):
+func record_frame(delta: float, input_dir: Vector2):
   var frame_data = {
     "start_position": global_transform.origin,
     "expected_end_position": Vector3.ZERO,
-    "input_dir": Vector2.ZERO,
+    "input_dir": input_dir,
+    "restart": pending_restart,
     "delta": delta,
     "velocity": velocity,
     "currentUserMoveSpeed": currentUserMoveSpeed,
@@ -318,6 +315,7 @@ func record_frame(delta: float):
     "cam_rotation": $cam.rotation,
     "fake_cam_rotation": $fake_cam.rotation
   }
+  pending_restart = false
   replay_buffer.append(frame_data)
 
 func stop_replay():

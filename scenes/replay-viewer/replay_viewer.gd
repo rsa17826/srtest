@@ -24,6 +24,9 @@ var saved_vel: Vector3
 var saved_layer: int
 var saved_cam_rot: Vector3
 var saved_mouse_mode: Input.MouseMode
+var saved_state := {}
+var first_diverge := -1 # first frame where the resimulation leaves the recorded path
+const DIVERGE_EPS := 0.01
 
 # checkpoints (level.checkpoints = [{"area": Area3D, "pane": MeshInstance3D}, ...])
 var cps: Array
@@ -141,6 +144,11 @@ func open() -> void:
   saved_layer = player.collision_layer
   saved_cam_rot = player.get_node("cam").rotation
   saved_mouse_mode = Input.mouse_mode
+  saved_state = {
+    "speed": player.currentUserMoveSpeed, "jump": player.currentUserJumpHeight,
+    "jumps": player.jumps, "kt": player.kt, "trypress": player.trypress.jump,
+    "fake_rot": player.get_node("fake_cam").rotation,
+  }
 
   cps = global.level.checkpoints
   saved_cp.clear()
@@ -185,6 +193,12 @@ func close() -> void:
   player.global_position = saved_pos
   player.velocity = saved_vel
   player.get_node("cam").rotation = saved_cam_rot
+  player.get_node("fake_cam").rotation = saved_state.fake_rot
+  player.currentUserMoveSpeed = saved_state.speed
+  player.currentUserJumpHeight = saved_state.jump
+  player.jumps = saved_state.jumps
+  player.kt = saved_state.kt
+  player.trypress.jump = saved_state.trypress
   player.current_mode = Player.ReplayMode.NORMAL
   Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
@@ -225,23 +239,59 @@ func _compile() -> void:
   positions.resize(n + 1)
   cam_rots.resize(n + 1)
   var total := 0.0
-  for i in n:
-    positions[i] = buf[i].start_position
-    cam_rots[i] = buf[i].cam_rotation
-    total += buf[i].delta
-  # final point: where the last frame ended up
-  positions[n] = buf[n - 1].expected_end_position
-  cam_rots[n] = buf[n - 1].cam_rotation
+  for f in buf:
+    total += f.delta
+  _simulate(buf)
   frame_time = total / n
   _find_checkpoint_frames()
 
   slider.max_value = n
   playhead = 0.0
-  btn_compile.visible = false
   compiled = true
   _set_controls_enabled(true)
   _apply_playhead()
   _update_info()
+
+# ---------------------------------------------------------------- resimulation
+# Rebuilds the path by re-running the player's own physics step (Player.step) from the recorded
+# *inputs* only: input_dir, trypress_jump, camera rotations, restart. Positions/velocities stored in
+# the replay are used for frame 0 and for the "differs from recording" check, never to place the player.
+
+func _simulate(buf: Array) -> void:
+  assert(Engine.physics_ticks_per_second == 60, "resimulation assumes 60 physics ticks per second")
+  var n := buf.size()
+  var cam: Node3D = player.get_node("cam")
+  var fake: Node3D = player.get_node("fake_cam")
+  var first = buf[0]
+
+  # refresh floor / wall flags at the start position (a zero-velocity slide touches nothing)
+  player.global_position = first.start_position
+  player.velocity = Vector3.ZERO
+  player.move_and_slide()
+
+  player.global_position = first.start_position
+  player.velocity = first.velocity
+  player.currentUserMoveSpeed = first.currentUserMoveSpeed
+  player.currentUserJumpHeight = first.currentUserJumpHeight
+  player.jumps = first.jumps
+  player.kt = first.kt
+
+  first_diverge = -1
+  for i in n:
+    var f = buf[i]
+    if f.restart:
+      player.die()
+    assert(is_equal_approx(f.delta, 1.0 / 60.0), "frame %d: delta isn't 1/60" % i)
+    positions[i] = player.global_position
+    cam_rots[i] = f.cam_rotation
+    cam.rotation = f.cam_rotation
+    fake.rotation = f.fake_cam_rotation
+    player.trypress.jump = f.trypress_jump
+    player.step(f.delta, f.input_dir)
+    if first_diverge == -1 and player.global_position.distance_to(f.expected_end_position) > DIVERGE_EPS:
+      first_diverge = i
+  positions[n] = player.global_position
+  cam_rots[n] = buf[n - 1].cam_rotation
 
 # ---------------------------------------------------------------- checkpoints
 # Player collision is off while viewing, so Area3Ds never fire. Instead, find the frame at
@@ -350,7 +400,12 @@ func _update_info() -> void:
     info.text = "Not compiled (%d frames recorded)" % player.replay_buffer.size()
     return
   var last := positions.size() - 1
-  info.text = "%s / %s   frame %d / %d" % [_fmt(playhead * frame_time), _fmt(last * frame_time), int(roundf(playhead)), last]
+  var text := "%s / %s   frame %d / %d" % [_fmt(playhead * frame_time), _fmt(last * frame_time), int(roundf(playhead)), last]
+  if first_diverge == -1:
+    text += "  |  matches recording"
+  else:
+    text += "  |  differs from recording at frame %d" % first_diverge
+  info.text = text
 
 func _fmt(seconds: float) -> String:
   return "%d:%05.2f" % [int(seconds) / 60, fmod(seconds, 60.0)]
