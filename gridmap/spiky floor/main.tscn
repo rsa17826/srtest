@@ -5,6 +5,7 @@
 [sub_resource type="PlaneMesh" id="PlaneMesh_ivw4r"]
 subdivide_width = 32
 subdivide_depth = 32
+center_offset = Vector3(0, 0.5, 0)
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_7uph4"]
 render_priority = 0
@@ -13,7 +14,7 @@ shader_parameter/base_color = Color(0.3705979, 0.0003571783, 0.4499616, 1)
 shader_parameter/glow_color = Color(0.22824928, 8.700837e-05, 0.26187387, 1)
 shader_parameter/rim_power = 4.0
 shader_parameter/rim_strength = 0.3
-shader_parameter/tip_glow = 999.0
+shader_parameter/tip_glow = 100.0
 shader_parameter/spike_density = 9.58
 shader_parameter/spike_width = 0.265
 shader_parameter/spike_height = 0.98

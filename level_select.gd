@@ -10,11 +10,6 @@ func _ready() -> void:
   Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
   set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
-  var bg := ColorRect.new()
-  bg.color = Color(0.01, 0.03, 0.06)
-  bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-  add_child(bg)
-
   var center := CenterContainer.new()
   center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
   add_child(center)

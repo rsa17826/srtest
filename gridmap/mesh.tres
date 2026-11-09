@@ -59,7 +59,7 @@ shader_parameter/base_color = Color(0.3705979, 0.0003571783, 0.4499616, 1)
 shader_parameter/glow_color = Color(0.22824928, 8.700837e-05, 0.26187387, 1)
 shader_parameter/rim_power = 4.0
 shader_parameter/rim_strength = 0.3
-shader_parameter/tip_glow = 999.0
+shader_parameter/tip_glow = 100.0
 shader_parameter/spike_density = 9.58
 shader_parameter/spike_width = 0.265
 shader_parameter/spike_height = 0.98
@@ -73,6 +73,7 @@ shader_parameter/pulse_amount = 0.10000000475
 material = SubResource("ShaderMaterial_7uph4")
 subdivide_width = 32
 subdivide_depth = 32
+center_offset = Vector3(0, 0.5, 0)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_c2ksa"]
 
@@ -83,7 +84,7 @@ shader_parameter/base_color = Color(0.3705979, 0.0003571783, 0.4499616, 1)
 shader_parameter/glow_color = Color(0.22824928, 8.700837e-05, 0.26187387, 1)
 shader_parameter/rim_power = 4.0
 shader_parameter/rim_strength = 0.3
-shader_parameter/tip_glow = 999.0
+shader_parameter/tip_glow = 100.0
 shader_parameter/spike_density = 9.58
 shader_parameter/spike_width = 0.265
 shader_parameter/spike_height = 0.98
@@ -159,6 +160,7 @@ shader_parameter/dot_drift = 0.15
 shader_parameter/flicker = 0.05
 
 [sub_resource type="QuadMesh" id="QuadMesh_wrdqp"]
+lightmap_size_hint = Vector2i(17, 22)
 material = SubResource("ShaderMaterial_2h5td")
 size = Vector2(3, 4)
 
