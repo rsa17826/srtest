@@ -1,32 +1,34 @@
 [gd_resource type="MeshLibrary" format=3 uid="uid://diobrekf3wpt1"]
 
-[ext_resource type="Shader" uid="uid://ce4t87cewkgr1" path="res://shaders/hologram.gdshader" id="1_5c8e7"]
+[ext_resource type="Shader" uid="uid://cauwhkcmtwcy6" path="res://shaders/main.gdshader" id="1_4oiww"]
 [ext_resource type="Shader" uid="uid://bf28n0ll6cxyg" path="res://shaders/spiky.gdshader" id="2_88ns5"]
 [ext_resource type="Shader" uid="uid://bpnhxqtcofqqf" path="res://shaders/spiky-floor.gdshader" id="3_5c8e7"]
 [ext_resource type="Shader" uid="uid://bcotj215vij15" path="res://shaders/goal.gdshader" id="4_88ns5"]
 [ext_resource type="Shader" uid="uid://cfydnuwktwfju" path="res://shaders/cp.gdshader" id="5_5c8e7"]
+[ext_resource type="Shader" uid="uid://cg7hpjjcwy0so" path="res://shaders/speedzone.gdshader" id="6_utu7k"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_lh8ei"]
 render_priority = 0
-shader = ExtResource("1_5c8e7")
-shader_parameter/color = Color(4.2114408e-08, 0.1647889, 0.20526299, 1)
-shader_parameter/base_alpha = 0.29600001406
-shader_parameter/rim_power = 1.13600003021
-shader_parameter/rim_strength = 1.2
-shader_parameter/intensity = 2.3770001129075
-shader_parameter/half_size = 0.5
-shader_parameter/edge_width = 0.06
-shader_parameter/edge_strength = 2.6150001242125
-shader_parameter/scan_density = 40.0
-shader_parameter/scan_speed = 1.5
-shader_parameter/scan_strength = 0.35
-shader_parameter/sweep_speed = 0.25
-shader_parameter/sweep_period = 12.0
-shader_parameter/sweep_strength = 1.0
-shader_parameter/flicker = 0.12
-shader_parameter/glitch = 0.04
+shader = ExtResource("1_4oiww")
+shader_parameter/base_color = Color(0.08, 0.09, 0.14, 1)
+shader_parameter/line_color = Color(0.8740201, 0.39386892, 1, 1)
+shader_parameter/cell_size = 1.0
+shader_parameter/line_width = 0.03
+shader_parameter/emission_strength = 1.5
+shader_parameter/move_color = Color(0.21016797, 0.0030127924, 0.29356346, 1)
+shader_parameter/move_dir = Vector2(0.5, 1)
+shader_parameter/move_speed = 0.5
+shader_parameter/move_spacing = 0.5
+shader_parameter/move_width = 0.015
+shader_parameter/move_emission = 2.0
+shader_parameter/spike_size = 0.2
+shader_parameter/spike_height = 0.12
+shader_parameter/spike_width = 0.25
+shader_parameter/spike_speed = 1.0
+shader_parameter/spike_pulse = 0.5
+shader_parameter/spike_randomness = 0.5
 
-[sub_resource type="BoxMesh" id="BoxMesh_5c8e7"]
+[sub_resource type="BoxMesh" id="BoxMesh_4oiww"]
 material = SubResource("ShaderMaterial_lh8ei")
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_jma0y"]
@@ -48,7 +50,7 @@ shader_parameter/pulse_speed = 5.855
 shader_parameter/pulse_amount = 0.4
 shader_parameter/breathe_amount = 0.08
 
-[sub_resource type="SphereMesh" id="SphereMesh_4oiww"]
+[sub_resource type="SphereMesh" id="SphereMesh_utu7k"]
 material = SubResource("ShaderMaterial_75vfm")
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_7uph4"]
@@ -68,7 +70,7 @@ shader_parameter/height_variation = 1.0
 shader_parameter/pulse_speed = 8.0
 shader_parameter/pulse_amount = 0.10000000475
 
-[sub_resource type="PlaneMesh" id="PlaneMesh_utu7k"]
+[sub_resource type="PlaneMesh" id="PlaneMesh_3vsbx"]
 material = SubResource("ShaderMaterial_7uph4")
 subdivide_width = 32
 subdivide_depth = 32
@@ -93,7 +95,7 @@ shader_parameter/height_variation = 1.0
 shader_parameter/pulse_speed = 8.0
 shader_parameter/pulse_amount = 0.10000000475
 
-[sub_resource type="BoxMesh" id="BoxMesh_3vsbx"]
+[sub_resource type="BoxMesh" id="BoxMesh_c2ksa"]
 material = SubResource("ShaderMaterial_m712a")
 subdivide_width = 48
 subdivide_height = 48
@@ -127,7 +129,7 @@ shader_parameter/streak_strength = 0.35
 shader_parameter/scan_speed = 0.765
 shader_parameter/flicker = 0.130000006175
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_c2ksa"]
+[sub_resource type="CylinderMesh" id="CylinderMesh_wrdqp"]
 material = SubResource("ShaderMaterial_mwww4")
 top_radius = 1.5
 bottom_radius = 1.5
@@ -158,33 +160,56 @@ shader_parameter/dot_size = 0.18
 shader_parameter/dot_drift = 0.15
 shader_parameter/flicker = 0.05
 
-[sub_resource type="QuadMesh" id="QuadMesh_wrdqp"]
+[sub_resource type="QuadMesh" id="QuadMesh_j3noi"]
 lightmap_size_hint = Vector2i(17, 22)
 material = SubResource("ShaderMaterial_2h5td")
 size = Vector2(3, 4)
 
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_can8g"]
+render_priority = 0
+shader = ExtResource("6_utu7k")
+shader_parameter/color = Color(1, 0.5, 0.05, 1)
+shader_parameter/intensity = 1.6
+shader_parameter/base_alpha = 0.12
+shader_parameter/pulse_amount = 0.2
+shader_parameter/direction = Vector2(2, -1)
+shader_parameter/columns = 3.0
+shader_parameter/rows = 3.0
+shader_parameter/speed = 0.6
+shader_parameter/slope = 0.8
+shader_parameter/thickness = 0.07
+shader_parameter/arm_length = 0.38
+shader_parameter/border_width = 0.03
+shader_parameter/border_strength = 1.5
+shader_parameter/rim_strength = 0.6
+
+[sub_resource type="BoxMesh" id="BoxMesh_vnf47"]
+material = SubResource("ShaderMaterial_can8g")
+
 [resource]
 item/0/name = "basic"
-item/0/mesh = SubResource("BoxMesh_5c8e7")
+item/0/mesh = SubResource("BoxMesh_4oiww")
 item/0/shapes = [SubResource("BoxShape3D_jma0y"), Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)]
 item/1/name = "spiky ball"
-item/1/mesh = SubResource("SphereMesh_4oiww")
+item/1/mesh = SubResource("SphereMesh_utu7k")
 item/2/name = "spiky floor"
-item/2/mesh = SubResource("PlaneMesh_utu7k")
+item/2/mesh = SubResource("PlaneMesh_3vsbx")
 item/2/mesh_transform = Transform3D(-1, 8.742278e-08, 0, -8.742278e-08, -1, 0, 0, 0, 1, 0, 0, 0)
 item/2/mesh_cast_shadow = 0
 item/2/shapes = [SubResource("BoxShape3D_c2ksa"), Transform3D(-1, 8.742278e-08, 0, -8.742278e-08, -1, 0, 0, 0, 1, 0, 0, 0)]
 item/2/navigation_mesh_transform = Transform3D(-1, 8.742278e-08, 0, -8.742278e-08, -1, 0, 0, 0, 1, 0, 0, 0)
 item/3/name = "spiky box"
-item/3/mesh = SubResource("BoxMesh_3vsbx")
+item/3/mesh = SubResource("BoxMesh_c2ksa")
 item/3/shapes = [SubResource("BoxShape3D_3vsbx"), Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)]
 item/4/name = "goal"
-item/4/mesh = SubResource("CylinderMesh_c2ksa")
+item/4/mesh = SubResource("CylinderMesh_wrdqp")
 item/4/mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9.5, 0)
 item/4/mesh_cast_shadow = 0
 item/4/navigation_mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9.5, 0)
 item/5/name = "cp"
-item/5/mesh = SubResource("QuadMesh_wrdqp")
+item/5/mesh = SubResource("QuadMesh_j3noi")
 item/5/mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
 item/5/mesh_cast_shadow = 0
 item/5/navigation_mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+item/6/name = "speed zone"
+item/6/mesh = SubResource("BoxMesh_vnf47")

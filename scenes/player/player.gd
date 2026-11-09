@@ -38,10 +38,14 @@ const DESYNC_THRESHOLD: float = 0.001
 func _init() -> void:
   global.player = self
 @onready var grid: GridMap = global.level.gridmap
+func getTileId(name):
+  var id := grid.mesh_library.find_item_by_name(name)
+  assert(id != -1, "tile " + name + " missing from mesh library")
+  return id
 @onready var hazard_ids := [
-  grid.mesh_library.find_item_by_name("spiky floor"),
-  grid.mesh_library.find_item_by_name("spiky box"),
-  grid.mesh_library.find_item_by_name("spiky ball"),
+  getTileId("spiky floor"),
+  getTileId("spiky box"),
+  getTileId("spiky ball"),
 ]
 @onready var playerHeight = $CollisionShape3D.shape.height / 2
 @onready var playerWidth = $CollisionShape3D.shape.radius / 2

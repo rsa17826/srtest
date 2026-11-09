@@ -1,40 +1,38 @@
 [gd_scene format=3 uid="uid://dm0etmn5y46wf"]
 
-[ext_resource type="Shader" uid="uid://bpnhxqtcofqqf" path="res://shaders/spiky-floor.gdshader" id="1_m7ut7"]
+[ext_resource type="Shader" uid="uid://cg7hpjjcwy0so" path="res://shaders/speedzone.gdshader" id="1_m7ut7"]
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_m712a"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_can8g"]
 render_priority = 0
 shader = ExtResource("1_m7ut7")
-shader_parameter/base_color = Color(0.3705979, 0.0003571783, 0.4499616, 1)
-shader_parameter/glow_color = Color(0.22824928, 8.700837e-05, 0.26187387, 1)
-shader_parameter/rim_power = 4.0
-shader_parameter/rim_strength = 0.3
-shader_parameter/tip_glow = 100.0
-shader_parameter/spike_density = 9.58
-shader_parameter/spike_width = 0.265
-shader_parameter/spike_height = 0.98
-shader_parameter/spike_sharpness = 5.095
-shader_parameter/jitter = 0.8
-shader_parameter/height_variation = 1.0
-shader_parameter/pulse_speed = 8.0
-shader_parameter/pulse_amount = 0.10000000475
+shader_parameter/color = Color(1, 0.5, 0.05, 1)
+shader_parameter/intensity = 1.6
+shader_parameter/base_alpha = 0.12
+shader_parameter/pulse_amount = 0.2
+shader_parameter/direction = Vector2(2, -1)
+shader_parameter/columns = 3.0
+shader_parameter/rows = 3.0
+shader_parameter/speed = 0.6
+shader_parameter/slope = 0.8
+shader_parameter/thickness = 0.07
+shader_parameter/arm_length = 0.38
+shader_parameter/border_width = 0.03
+shader_parameter/border_strength = 1.5
+shader_parameter/rim_strength = 0.6
 
-[sub_resource type="BoxMesh" id="BoxMesh_5rmfp"]
-material = SubResource("ShaderMaterial_m712a")
-subdivide_width = 48
-subdivide_height = 48
-subdivide_depth = 48
+[sub_resource type="BoxMesh" id="BoxMesh_n4wpx"]
+material = SubResource("ShaderMaterial_can8g")
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_3vsbx"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_a3bc7"]
 
 [node name="spiky floor" type="Node3D" unique_id=818926986]
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1224317292]
-mesh = SubResource("BoxMesh_5rmfp")
+mesh = SubResource("BoxMesh_n4wpx")
 metadata/_edit_lock_ = true
 
-[node name="StaticBody3D2" type="StaticBody3D" parent="MeshInstance3D" unique_id=1296955096]
+[node name="Area3D" type="Area3D" parent="MeshInstance3D" unique_id=564941095]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshInstance3D/StaticBody3D2" unique_id=151750376]
-shape = SubResource("BoxShape3D_3vsbx")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshInstance3D/Area3D" unique_id=151750376]
+shape = SubResource("BoxShape3D_a3bc7")
 metadata/_edit_lock_ = true
