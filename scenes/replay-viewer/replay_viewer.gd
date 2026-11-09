@@ -5,8 +5,7 @@ class_name ReplayViewer
 
 @export var toggle_key: Key = KEY_F9
 
-const FLY_SPEED := 10.0
-const FLY_SENSITIVITY := 0.0025
+const FLY_SPEED := 16.0
 const TELEPORT_DIST := 3.0 # frame-to-frame jump bigger than this = respawn, don't blend
 
 # --- state ---
@@ -134,7 +133,7 @@ func open() -> void:
   player = global.player
   assert(player != null, "ReplayViewer: no player")
   if player.current_mode == Player.ReplayMode.RECORDING:
-    player.stop_recording()
+    player.abort_recording()
   player.end_win()
 
   saved_pos = player.global_position
@@ -238,6 +237,7 @@ func _compile() -> void:
 
   slider.max_value = n
   playhead = 0.0
+  btn_compile.visible = false
   compiled = true
   _set_controls_enabled(true)
   _apply_playhead()
@@ -384,8 +384,8 @@ func _input(event: InputEvent) -> void:
       return
 
   if flying and event is InputEventMouseMotion:
-    fly_yaw -= event.relative.x * FLY_SENSITIVITY
-    fly_pitch = clampf(fly_pitch - event.relative.y * FLY_SENSITIVITY, -PI / 2 + 0.02, PI / 2 - 0.02)
+    fly_yaw -= event.relative.x * global.player.MOUSE_SENSITIVITY
+    fly_pitch = clampf(fly_pitch - event.relative.y * global.player.MOUSE_SENSITIVITY, -PI / 2 + 0.02, PI / 2 - 0.02)
     fly_cam.rotation = Vector3(fly_pitch, fly_yaw, 0)
     get_viewport().set_input_as_handled()
     return

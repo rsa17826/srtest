@@ -78,11 +78,11 @@ center_offset = Vector3(0, 0.5, 0)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_c2ksa"]
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_m712a"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_eweih"]
 render_priority = 0
 shader = ExtResource("3_5c8e7")
-shader_parameter/base_color = Color(0.3705979, 0.0003571783, 0.4499616, 1)
-shader_parameter/glow_color = Color(0.22824928, 8.700837e-05, 0.26187387, 1)
+shader_parameter/base_color = Color(0, 0.14509805, 0.22352941, 1)
+shader_parameter/glow_color = Color(0.03529412, 0, 0.72156864, 1)
 shader_parameter/rim_power = 4.0
 shader_parameter/rim_strength = 0.3
 shader_parameter/tip_glow = 100.0
@@ -96,7 +96,7 @@ shader_parameter/pulse_speed = 8.0
 shader_parameter/pulse_amount = 0.10000000475
 
 [sub_resource type="BoxMesh" id="BoxMesh_c2ksa"]
-material = SubResource("ShaderMaterial_m712a")
+material = SubResource("ShaderMaterial_eweih")
 subdivide_width = 48
 subdivide_height = 48
 subdivide_depth = 48

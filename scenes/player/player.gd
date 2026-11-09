@@ -52,7 +52,7 @@ func getTileId(name):
 
 func _ready():
   assert(not -1 in hazard_ids, "hazard tile name missing from mesh library")
-  cpPos = startPos
+  fullReset()
 
 func touching_hazard() -> bool:
   for i in get_slide_collision_count():
@@ -96,8 +96,16 @@ func _input(event):
 
 func die():
   end_win()
-  position = startPos
+  position = cpPos
   velocity = Vector3.ZERO
+
+func fullReset():
+  end_win()
+  position = startPos
+  cpPos = startPos
+  velocity = Vector3.ZERO
+  currentUserMoveSpeed = 0
+  currentUserJumpHeight = 0
   start_recording()
 
 func _unhandled_input(event):
@@ -153,6 +161,9 @@ func stop_recording():
   log.pp("--- RECORDING STOPPED (Frames recorded: ", replay_buffer.size(), ") ---")
   var path := Replays.save(Replays.current_level_name(), replay_buffer)
   log.pp("Saved replay to ", path)
+
+func abort_recording():
+  current_mode = ReplayMode.NORMAL
 
 func start_replay():
   if replay_buffer.is_empty():

@@ -47,7 +47,6 @@ static func save(level: String, buffer: Array) -> String:
   var dir := ROOT + "/" + level
   DirAccess.make_dir_recursive_absolute(dir)
   var stamp := Time.get_datetime_string_from_system().replace(":", "-")
-  var path := dir + "/" + stamp + ".json"
   var frames := []
   for frame in buffer:
     var o := {}
@@ -55,6 +54,7 @@ static func save(level: String, buffer: Array) -> String:
       var v = frame[k]
       o[k] = [v.x, v.y, v.z] if k in VEC3_KEYS else ([v.x, v.y] if k in VEC2_KEYS else v)
     frames.append(o)
+  var path := dir + "/" + stamp + " - " + str(len(frames)) + ".json"
   var file := FileAccess.open(path, FileAccess.WRITE)
   assert(file != null, "can't write %s (error %d)" % [path, FileAccess.get_open_error()])
   file.store_string(JSON.stringify({"level": level, "frames": frames}))
