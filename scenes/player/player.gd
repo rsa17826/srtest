@@ -143,13 +143,15 @@ func updatetrypress(has2: Array, delta):
 
 func start_recording():
   replay_buffer.clear()
+  replay_frame_index = 0
   current_mode = ReplayMode.RECORDING
   log.pp("--- RECORDING STARTED ---")
 
 func stop_recording():
   current_mode = ReplayMode.NORMAL
   log.pp("--- RECORDING STOPPED (Frames recorded: ", replay_buffer.size(), ") ---")
-  global.file.write("res://replay.json", replay_buffer)
+  var path := Replays.save(Replays.current_level_name(), replay_buffer)
+  log.pp("Saved replay to ", path)
 
 func start_replay():
   if replay_buffer.is_empty():
@@ -173,7 +175,7 @@ func start_replay():
   log.pp("--- REPLAY STARTED ---")
 
 func _physics_process(delta: float) -> void:
-  if current_mode == ReplayMode.VIEWING: return   # first line, before `if winning:`
+  if current_mode == ReplayMode.VIEWING: return # first line, before `if winning:`
   if winning:
     winTimer += delta
     win_fade = global.rerange(winTimer, 0, 1, 0, 8)

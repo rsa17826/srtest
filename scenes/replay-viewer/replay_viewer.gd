@@ -50,6 +50,19 @@ func _ready() -> void:
   player = global.player
   _build_ui()
   panel.hide()
+  if Replays.pending_path != "":
+    _open_pending.call_deferred() # wait until the player/level finished _ready
+
+func _open_pending() -> void:
+  var path := Replays.pending_path
+  Replays.pending_path = ""
+  open()
+  player.replay_buffer = Replays.load_file(path)
+  _compile()
+
+func _go_menu() -> void:
+  Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+  get_tree().change_scene_to_file(Replays.MENU_SCENE)
 
 func _build_ui() -> void:
   panel = PanelContainer.new()
@@ -90,6 +103,7 @@ func _build_ui() -> void:
   row.add_child(info)
 
   btn_close = _make_button("Close", row, close)
+  _make_button("Menu", row, _go_menu)
   _set_controls_enabled(false)
   _update_info()
 

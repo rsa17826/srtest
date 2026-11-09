@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="srtest"
-run/main_scene="uid://dxulnfk853fam"
+run/main_scene="uid://5fqryky1k7o6"
 config/features=PackedStringArray("4.8", "Forward Plus")
 config/icon="res://icon.svg"
 
