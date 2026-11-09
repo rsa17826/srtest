@@ -10,12 +10,12 @@
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_lh8ei"]
 render_priority = 0
 shader = ExtResource("1_4oiww")
-shader_parameter/base_color = Color(0.08, 0.09, 0.14, 1)
-shader_parameter/line_color = Color(0.8740201, 0.39386892, 1, 1)
+shader_parameter/base_color = Color(8.338652e-06, 0.067108035, 0.2664409, 1)
+shader_parameter/line_color = Color(0.44515145, 0.6266843, 1, 1)
 shader_parameter/cell_size = 1.0
 shader_parameter/line_width = 0.03
 shader_parameter/emission_strength = 1.5
-shader_parameter/move_color = Color(0.21016797, 0.0030127924, 0.29356346, 1)
+shader_parameter/move_color = Color(3.5087316e-05, 0.09759768, 0.36068362, 1)
 shader_parameter/move_dir = Vector2(0.5, 1)
 shader_parameter/move_speed = 0.5
 shader_parameter/move_spacing = 0.5
@@ -56,8 +56,8 @@ material = SubResource("ShaderMaterial_75vfm")
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_7uph4"]
 render_priority = 0
 shader = ExtResource("3_5c8e7")
-shader_parameter/base_color = Color(0.3705979, 0.0003571783, 0.4499616, 1)
-shader_parameter/glow_color = Color(0.22824928, 8.700837e-05, 0.26187387, 1)
+shader_parameter/base_color = Color(0, 0.14509805, 0.22352941, 1)
+shader_parameter/glow_color = Color(0.03529412, 0, 0.72156864, 1)
 shader_parameter/rim_power = 4.0
 shader_parameter/rim_strength = 0.3
 shader_parameter/tip_glow = 100.0
