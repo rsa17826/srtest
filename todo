@@ -7,4 +7,4 @@ add player spawn animation
 add player spawnpotin as a gridmap block
 make player spawn on the ground
 make show_keybinds disable mouse capture while active
-
+figure out the input method thatd be best to use - don't think there reason for the +2 now
