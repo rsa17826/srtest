@@ -8,6 +8,7 @@ func _init() -> void:
 func _ready() -> void:
   for area in spawn_areas(gridmap, "goal"):
     area.body_entered.connect(func(body): if body is Player: body.win(area))
+  # TODO
   # for area in spawn_areas(gridmap, "cp"):
   #   area.body_entered.connect(func(body): if body is Player: area.get_parent().collect())
 
