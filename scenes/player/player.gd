@@ -200,14 +200,17 @@ func _physics_process(delta: float) -> void:
     win_fade = global.rerange(winTimer, 0, 1, 0, 8)
     if current_mode == ReplayMode.RECORDING:
       record_frame(delta, input_dir)
-    if winTimer >= 1:
-      stop_recording()
-      end_win()
     win_spin = global.rerange_clamp(winTimer, 0, 1, -.05, -4)
     win_mat.set_shader_parameter("top_fade", win_fade)
     win_mat.set_shader_parameter("intensity", global.rerange_clamp(winTimer, 0, .75, 1.5, 0))
     win_mat.set_shader_parameter("spin_offset", win_spin)
     global_position.y = win_startY + global.rerange_clamp(winTimer, 0, 1, 0, 10)
+    if current_mode == ReplayMode.RECORDING:
+      replay_buffer[replay_frame_index].expected_end_position = global_position # was left at (0,0,0)
+      replay_frame_index += 1
+    if winTimer >= 1:
+      stop_recording()
+      end_win()
     return
   var has2 = []
 
@@ -305,6 +308,8 @@ func record_frame(delta: float, input_dir: Vector2):
     "expected_end_position": Vector3.ZERO,
     "input_dir": input_dir,
     "restart": pending_restart,
+    "winning": winning, # win animation frames are scripted, not simulated
+    "cp_pos": cpPos, # respawn point at the start of this frame (die() uses it)
     "delta": delta,
     "velocity": velocity,
     "currentUserMoveSpeed": currentUserMoveSpeed,

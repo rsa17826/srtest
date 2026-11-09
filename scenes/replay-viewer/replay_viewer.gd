@@ -148,6 +148,7 @@ func open() -> void:
     "speed": player.currentUserMoveSpeed, "jump": player.currentUserJumpHeight,
     "jumps": player.jumps, "kt": player.kt, "trypress": player.trypress.jump,
     "fake_rot": player.get_node("fake_cam").rotation,
+    "cp_pos": player.cpPos,
   }
 
   cps = global.level.checkpoints
@@ -199,6 +200,7 @@ func close() -> void:
   player.jumps = saved_state.jumps
   player.kt = saved_state.kt
   player.trypress.jump = saved_state.trypress
+  player.cpPos = saved_state.cp_pos
   player.current_mode = Player.ReplayMode.NORMAL
   Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
@@ -279,19 +281,25 @@ func _simulate(buf: Array) -> void:
   first_diverge = -1
   for i in n:
     var f = buf[i]
-    if f.restart:
-      player.die()
     assert(is_equal_approx(f.delta, 1.0 / 60.0), "frame %d: delta isn't 1/60" % i)
-    positions[i] = player.global_position
     cam_rots[i] = f.cam_rotation
     cam.rotation = f.cam_rotation
     fake.rotation = f.fake_cam_rotation
+    if f.winning:
+      # the win animation is scripted (rises, snaps to the goal), so take it from the recording
+      player.global_position = f.start_position
+      positions[i] = f.start_position
+      continue
+    player.cpPos = f.cp_pos # checkpoints are not re-derived; respawns use the recorded one
+    if f.restart:
+      player.die()
+    positions[i] = player.global_position
     player.trypress.jump = f.trypress_jump
     player.step(f.delta, f.input_dir)
     log.pp(player.global_position.distance_to(f.expected_end_position), i)
     if first_diverge == -1 and player.global_position.distance_to(f.expected_end_position) > DIVERGE_EPS:
       first_diverge = i
-  positions[n] = player.global_position
+  positions[n] = buf[n - 1].expected_end_position if buf[n - 1].winning else player.global_position
   cam_rots[n] = buf[n - 1].cam_rotation
 
 # ---------------------------------------------------------------- checkpoints
