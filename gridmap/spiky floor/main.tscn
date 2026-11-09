@@ -25,7 +25,7 @@ shader_parameter/pulse_amount = 0.10000000475
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_c2ksa"]
 
-[node name="spiky floor" type="Node3D" unique_id=818926986]
+[node name="root" type="Node3D" unique_id=818926986]
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1224317292]
 cast_shadow = 0

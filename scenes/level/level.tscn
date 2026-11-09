@@ -9,10 +9,9 @@ script = ExtResource("1_ig7tw")
 gridmap = NodePath("GridMap")
 
 [node name="player" parent="." unique_id=1157404720 instance=ExtResource("2_0xm2m")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.8389406, -12.241836, -35.484093)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.839, 7.2119756, -35.484)
 
 [node name="GridMap" type="GridMap" parent="." unique_id=1986421083]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -19.999966, 0)
 mesh_library = ExtResource("3_i166f")
 cell_size = Vector3(1, 1, 1)
 debug_octant_color = Color(1, 0.08627451, 0.4862745, 1)

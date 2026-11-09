@@ -26,7 +26,7 @@ shader_parameter/spike_randomness = 0.5
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_jma0y"]
 
-[node name="basic" type="Node3D" unique_id=818926986]
+[node name="root" type="Node3D" unique_id=818926986]
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1224317292]
 mesh = ExtResource("1_5d32t")

@@ -23,7 +23,7 @@ shader_parameter/breathe_amount = 0.08
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_lvxji"]
 
-[node name="basic" type="Node3D" unique_id=818926986]
+[node name="root" type="Node3D" unique_id=818926986]
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1224317292]
 mesh = SubResource("SphereMesh_p47bc")

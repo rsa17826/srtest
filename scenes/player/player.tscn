@@ -31,11 +31,6 @@ script = ExtResource("4_5qxw0")
 
 [node name="fake_cam" type="Node3D" parent="." unique_id=501026825]
 
-[node name="OmniLight3D" type="OmniLight3D" parent="." unique_id=508971983]
-light_color = Color(0.687159, 0.841671, 0.951543, 1)
-light_energy = 2.304
-omni_range = 4096.0
-
 [node name="center" type="CenterContainer" parent="." unique_id=1641822672]
 anchors_preset = 8
 anchor_left = 0.5
