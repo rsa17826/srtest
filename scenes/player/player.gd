@@ -172,12 +172,9 @@ func _physics_process(delta: float) -> void:
     win_fade = global.rerange(winTimer, 0, 1, 0, 8)
     if winTimer >= 1:
       end_win()
-    var a = global.rerange_clamp(winTimer, 0, .75, 1.5, 0)
-    win_spin_rate = global.rerange_clamp(winTimer, 0, 1, -.05, -10)
-    log.pp(win_spin_rate)
-    win_spin += win_spin_rate * delta
+    win_spin = global.rerange_clamp(winTimer, 0, 1, -.05, -4)
     win_mat.set_shader_parameter("top_fade", win_fade)
-    win_mat.set_shader_parameter("intensity", a)
+    win_mat.set_shader_parameter("intensity", global.rerange_clamp(winTimer, 0, .75, 1.5, 0))
     win_mat.set_shader_parameter("spin_offset", win_spin)
     global_position.y += 10 * delta
     return
