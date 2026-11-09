@@ -279,6 +279,7 @@ func _simulate(buf: Array) -> void:
   player.kt = first.kt
 
   first_diverge = -1
+  var lastf = null
   for i in n:
     var f = buf[i]
     assert(is_equal_approx(f.delta, 1.0 / 60.0), "frame %d: delta isn't 1/60" % i)
@@ -297,8 +298,10 @@ func _simulate(buf: Array) -> void:
     player.trypress.jump = f.trypress_jump
     player.step(f.delta, f.input_dir)
     log.pp(player.global_position.distance_to(f.expected_end_position), i)
-    if first_diverge == -1 and player.global_position.distance_to(f.expected_end_position) > DIVERGE_EPS:
+    if first_diverge == -1 and player.global_position.distance_to(f.expected_end_position) > 0:
+      log.pp(lastf, f)
       first_diverge = i
+    lastf = f
   positions[n] = buf[n - 1].expected_end_position if buf[n - 1].winning else player.global_position
   cam_rots[n] = buf[n - 1].cam_rotation
 
