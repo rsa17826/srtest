@@ -25,6 +25,7 @@ shader_parameter/dot_drift = 0.15
 shader_parameter/flicker = 0.05
 
 [sub_resource type="QuadMesh" id="QuadMesh_x7okl"]
+lightmap_size_hint = Vector2i(17, 22)
 material = SubResource("ShaderMaterial_2h5td")
 size = Vector2(3, 4)
 

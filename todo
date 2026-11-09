@@ -2,3 +2,9 @@ make a way to view replays, make a button to compile the replay from player stat
 make it so that the replays are recorded and saved when beating a level
 add level select
 add tutorial text
+make reset and full reset work as they should
+add player spawn animation
+add player spawnpotin as a gridmap block
+make player spawn on the ground
+make show_keybinds disable mouse capture while active
+
