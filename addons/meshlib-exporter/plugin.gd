@@ -46,7 +46,7 @@ func _sync_scene(lib: MeshLibrary, folder: String, root: Node) -> void:
       lib.set_item_name(id, item_name)
 
     var result := {"mesh": null, "shapes": []}
-    _collect(child, Transform3D.IDENTITY, result)
+    _collect(child, child.transform, result)
     lib.set_item_mesh(id, result.mesh)
     lib.set_item_mesh_cast_shadow(id, result.cast_shadow)
     lib.set_item_shapes(id, result.shapes)
@@ -55,6 +55,7 @@ func _sync_scene(lib: MeshLibrary, folder: String, root: Node) -> void:
 func _collect(node: Node3D, xform: Transform3D, result: Dictionary) -> void:
   if node is MeshInstance3D:
     result.mesh = _bake_mesh(node)
+    result.mesh_transform = xform
     result.cast_shadow = node.cast_shadow
   elif node is CollisionShape3D:
     result.shapes.append(node.shape)

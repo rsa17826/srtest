@@ -1,0 +1,54 @@
+[gd_scene format=3 uid="uid://oym3x7jxdtvh"]
+
+[ext_resource type="Shader" uid="uid://bcotj215vij15" path="res://shaders/goal.gdshader" id="1_mwww4"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_uirjs"]
+top_radius = 1.5
+bottom_radius = 1.5
+height = 20.0
+radial_segments = 48
+rings = 1
+cap_top = false
+cap_bottom = false
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_mwww4"]
+render_priority = 0
+shader = ExtResource("1_mwww4")
+shader_parameter/color = Color(0.2, 0.7, 1, 1)
+shader_parameter/accent = Color(0.85, 0.97, 1, 1)
+shader_parameter/height = 20.0
+shader_parameter/intensity = 1.5
+shader_parameter/fill = 0.0
+shader_parameter/top_fade = 0.6
+shader_parameter/edge_power = 2.5
+shader_parameter/edge_strength = 1.5550000000000002
+shader_parameter/panel_count = 4.0
+shader_parameter/window_height = 3.0
+shader_parameter/frame_width = 0.06
+shader_parameter/frame_strength = 0.9
+shader_parameter/header_height = 0.35
+shader_parameter/text_density = 4.0
+shader_parameter/text_scroll = 3.0
+shader_parameter/text_strength = 0.45
+shader_parameter/streak_count = 48.0
+shader_parameter/streak_strength = 0.35
+shader_parameter/scan_speed = 0.765
+shader_parameter/flicker = 0.130000006175
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_88ns5"]
+height = 20.0
+radius = 1.5
+
+[node name="goal" type="Node3D" unique_id=818926986]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1224317292]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10, 0)
+cast_shadow = 0
+mesh = SubResource("CylinderMesh_uirjs")
+surface_material_override/0 = SubResource("ShaderMaterial_mwww4")
+metadata/_edit_lock_ = true
+
+[node name="Area3D" type="Area3D" parent="MeshInstance3D" unique_id=394266070]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshInstance3D/Area3D" unique_id=1952208622]
+shape = SubResource("CylinderShape3D_88ns5")

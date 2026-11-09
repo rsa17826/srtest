@@ -1,6 +1,6 @@
 extends CharacterBody3D
 
-const USER_MOVE_SPEED = 3.5
+const USER_MOVE_SPEED = 5.5
 const JUMP_SPEED_BOOST = 1.5
 const JUMP_VEL = 10.4
 var MAX_JUMPS = 1
@@ -24,6 +24,7 @@ const DESYNC_THRESHOLD: float = 0.001
 @onready var grid: GridMap = global.level.gridmap
 @onready var hazard_ids := [
   grid.mesh_library.find_item_by_name("spiky floor"),
+  grid.mesh_library.find_item_by_name("spiky box"),
   grid.mesh_library.find_item_by_name("spiky ball"),
 ]
 @onready var playerHeight = $CollisionShape3D.shape.height / 2
@@ -77,8 +78,7 @@ func _input(event):
 
 func die():
   position = startPos
-  velocity = Vector3(0, -9999, 0)
-  self.set_deferred("velocity", Vector3(0, -9999, 0))
+  velocity = Vector3.ZERO
 
 func _unhandled_input(event):
   if event.is_action_pressed("restart"):

@@ -3,6 +3,7 @@
 [ext_resource type="Shader" uid="uid://cauwhkcmtwcy6" path="res://shaders/main.gdshader" id="1_b5ih1"]
 [ext_resource type="Shader" uid="uid://bf28n0ll6cxyg" path="res://shaders/spiky.gdshader" id="2_88ns5"]
 [ext_resource type="Shader" uid="uid://bpnhxqtcofqqf" path="res://shaders/spiky-floor.gdshader" id="3_5c8e7"]
+[ext_resource type="Shader" uid="uid://bcotj215vij15" path="res://shaders/goal.gdshader" id="4_88ns5"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_dh7de"]
 render_priority = 0
@@ -25,7 +26,7 @@ shader_parameter/spike_speed = 1.0
 shader_parameter/spike_pulse = 0.5
 shader_parameter/spike_randomness = 0.5
 
-[sub_resource type="BoxMesh" id="BoxMesh_b5ih1"]
+[sub_resource type="BoxMesh" id="BoxMesh_88ns5"]
 material = SubResource("ShaderMaterial_dh7de")
 subdivide_width = 32
 subdivide_height = 32
@@ -50,7 +51,7 @@ shader_parameter/pulse_speed = 5.855
 shader_parameter/pulse_amount = 0.4
 shader_parameter/breathe_amount = 0.08
 
-[sub_resource type="SphereMesh" id="SphereMesh_88ns5"]
+[sub_resource type="SphereMesh" id="SphereMesh_5c8e7"]
 material = SubResource("ShaderMaterial_75vfm")
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_lvxji"]
@@ -72,14 +73,14 @@ shader_parameter/height_variation = 1.0
 shader_parameter/pulse_speed = 8.0
 shader_parameter/pulse_amount = 0.10000000475
 
-[sub_resource type="PlaneMesh" id="PlaneMesh_5c8e7"]
+[sub_resource type="PlaneMesh" id="PlaneMesh_4oiww"]
 material = SubResource("ShaderMaterial_7uph4")
 subdivide_width = 32
 subdivide_depth = 32
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_c2ksa"]
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_4oiww"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_utu7k"]
 render_priority = 0
 shader = ExtResource("3_5c8e7")
 shader_parameter/base_color = Color(0.3705979, 0.0003571783, 0.4499616, 1)
@@ -96,25 +97,67 @@ shader_parameter/height_variation = 1.0
 shader_parameter/pulse_speed = 8.0
 shader_parameter/pulse_amount = 0.10000000475
 
-[sub_resource type="BoxMesh" id="BoxMesh_utu7k"]
-material = SubResource("ShaderMaterial_4oiww")
+[sub_resource type="BoxMesh" id="BoxMesh_3vsbx"]
+material = SubResource("ShaderMaterial_utu7k")
 subdivide_width = 32
 subdivide_height = 32
 subdivide_depth = 32
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_3vsbx"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_wrdqp"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_mwww4"]
+render_priority = 0
+shader = ExtResource("4_88ns5")
+shader_parameter/color = Color(0.2, 0.7, 1, 1)
+shader_parameter/accent = Color(0.85, 0.97, 1, 1)
+shader_parameter/height = 20.0
+shader_parameter/intensity = 1.5
+shader_parameter/fill = 0.0
+shader_parameter/top_fade = 0.6
+shader_parameter/edge_power = 2.5
+shader_parameter/edge_strength = 1.5550000000000002
+shader_parameter/panel_count = 4.0
+shader_parameter/window_height = 3.0
+shader_parameter/frame_width = 0.06
+shader_parameter/frame_strength = 0.9
+shader_parameter/header_height = 0.35
+shader_parameter/text_density = 4.0
+shader_parameter/text_scroll = 3.0
+shader_parameter/text_strength = 0.45
+shader_parameter/streak_count = 48.0
+shader_parameter/streak_strength = 0.35
+shader_parameter/scan_speed = 0.765
+shader_parameter/flicker = 0.130000006175
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_j3noi"]
+material = SubResource("ShaderMaterial_mwww4")
+top_radius = 1.5
+bottom_radius = 1.5
+height = 20.0
+radial_segments = 48
+rings = 1
+cap_top = false
+cap_bottom = false
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_88ns5"]
+height = 20.0
+radius = 1.5
 
 [resource]
 item/0/name = "basic"
-item/0/mesh = SubResource("BoxMesh_b5ih1")
+item/0/mesh = SubResource("BoxMesh_88ns5")
 item/0/shapes = [SubResource("BoxShape3D_jma0y"), Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)]
 item/1/name = "spiky ball"
-item/1/mesh = SubResource("SphereMesh_88ns5")
+item/1/mesh = SubResource("SphereMesh_5c8e7")
 item/1/shapes = [SubResource("SphereShape3D_lvxji"), Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)]
 item/2/name = "spiky floor"
-item/2/mesh = SubResource("PlaneMesh_5c8e7")
+item/2/mesh = SubResource("PlaneMesh_4oiww")
 item/2/mesh_cast_shadow = 0
 item/2/shapes = [SubResource("BoxShape3D_c2ksa"), Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)]
 item/3/name = "spiky box"
-item/3/mesh = SubResource("BoxMesh_utu7k")
-item/3/shapes = [SubResource("BoxShape3D_3vsbx"), Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)]
+item/3/mesh = SubResource("BoxMesh_3vsbx")
+item/3/shapes = [SubResource("BoxShape3D_wrdqp"), Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)]
+item/4/name = "goal"
+item/4/mesh = SubResource("CylinderMesh_j3noi")
+item/4/mesh_cast_shadow = 0
+item/4/shapes = [SubResource("CylinderShape3D_88ns5"), Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10, 0)]
