@@ -6,6 +6,9 @@ func _init() -> void:
   global.level = self
 
 func _ready() -> void:
+  for area in spawn_areas(gridmap, "goal"):
+    area.body_entered.connect(func(body): body.win(self))
+
   var sky_mat := ProceduralSkyMaterial.new()
   sky_mat.sky_top_color = Color("#3d6fb5")
   sky_mat.sky_horizon_color = Color("#c4a0f0")
@@ -48,3 +51,30 @@ func _ready() -> void:
   sun.shadow_enabled = true
   sun.directional_shadow_max_distance = 60.0
   add_child(sun)
+func spawn_areas(grid: GridMap, tile: String) -> Array[Area3D]:
+  var id := grid.mesh_library.find_item_by_name(tile)
+  assert(id != -1, "no tile named '%s' in the mesh library" % tile)
+
+  var scene_root: Node = load("res://gridmap/%s/main.tscn" % tile).instantiate()
+  var tile_root: Node3D = scene_root.get_child(0)
+  var template: Area3D = tile_root.find_children("*", "Area3D", true, false)[0]
+  var rel := _relative_transform(template, scene_root)
+
+  var areas: Array[Area3D] = []
+  for cell in grid.get_used_cells_by_item(id):
+    var area: Area3D = template.duplicate()
+    grid.add_child(area)
+    var cell_xform := Transform3D(grid.get_cell_item_basis(cell), grid.map_to_local(cell))
+    area.transform = cell_xform * rel
+    areas.append(area)
+
+  scene_root.free()
+  return areas
+
+# transform of node relative to root, same as the plugin uses for shapes
+func _relative_transform(node: Node3D, root: Node) -> Transform3D:
+  var x := Transform3D.IDENTITY
+  while node != root:
+    x = node.transform * x
+    node = node.get_parent()
+  return x

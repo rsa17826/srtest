@@ -13,6 +13,8 @@ const upgravity: float = 22
 var currentUserMoveSpeed: float = 0
 var currentUserJumpHeight: float = 0
 
+var winning := false
+
 # --- REPLAY SYSTEM VARIABLES ---
 enum ReplayMode {NORMAL, RECORDING, REPLAYING}
 var current_mode = ReplayMode.NORMAL
@@ -154,6 +156,9 @@ func start_replay():
   log.pp("--- REPLAY STARTED ---")
 
 func _physics_process(delta: float) -> void:
+  if winning:
+    global_position.y += 10 * delta
+    return
   # var cell := grid.local_to_map(grid.to_local(global_position - Vector3(0, playerHeight + .01, 0)))
   var has2 = []
   delta = 1 / 60.0
@@ -281,3 +286,8 @@ func check_desync(frame: int):
   if distance > DESYNC_THRESHOLD:
     print_rich("[color=red][DESYNC Frame %d][/color] Drift: %.4f units. Expected %s, Got %s" % [frame, distance, recorded_pos, actual_pos])
     global_transform.origin = recorded_pos
+
+func win(goal: Node3D):
+  global_position.x = goal.global_position.x
+  global_position.z = goal.global_position.z
+  winning = true

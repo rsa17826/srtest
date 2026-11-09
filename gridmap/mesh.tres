@@ -54,8 +54,6 @@ shader_parameter/breathe_amount = 0.08
 [sub_resource type="SphereMesh" id="SphereMesh_5c8e7"]
 material = SubResource("ShaderMaterial_75vfm")
 
-[sub_resource type="SphereShape3D" id="SphereShape3D_lvxji"]
-
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_7uph4"]
 render_priority = 0
 shader = ExtResource("3_5c8e7")
@@ -139,17 +137,12 @@ rings = 1
 cap_top = false
 cap_bottom = false
 
-[sub_resource type="CylinderShape3D" id="CylinderShape3D_88ns5"]
-height = 20.0
-radius = 1.5
-
 [resource]
 item/0/name = "basic"
 item/0/mesh = SubResource("BoxMesh_88ns5")
 item/0/shapes = [SubResource("BoxShape3D_jma0y"), Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)]
 item/1/name = "spiky ball"
 item/1/mesh = SubResource("SphereMesh_5c8e7")
-item/1/shapes = [SubResource("SphereShape3D_lvxji"), Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)]
 item/2/name = "spiky floor"
 item/2/mesh = SubResource("PlaneMesh_4oiww")
 item/2/mesh_cast_shadow = 0
@@ -161,5 +154,4 @@ item/4/name = "goal"
 item/4/mesh = SubResource("CylinderMesh_j3noi")
 item/4/mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10, 0)
 item/4/mesh_cast_shadow = 0
-item/4/shapes = [SubResource("CylinderShape3D_88ns5"), Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10, 0)]
 item/4/navigation_mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10, 0)

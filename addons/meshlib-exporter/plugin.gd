@@ -52,18 +52,20 @@ func _sync_scene(lib: MeshLibrary, folder: String, root: Node) -> void:
     lib.set_item_mesh_cast_shadow(id, result.cast_shadow)
     lib.set_item_shapes(id, result.shapes)
 
-func _collect(node: Node3D, xform: Transform3D, result: Dictionary) -> void:
+func _collect(node: Node3D, xform: Transform3D, result: Dictionary, in_area:=false) -> void:
+  in_area = in_area or node is Area3D
+
   if node is MeshInstance3D:
     result.mesh = _bake_mesh(node)
     result.mesh_transform = xform
     result.cast_shadow = node.cast_shadow
-  elif node is CollisionShape3D:
+  elif node is CollisionShape3D and not in_area:
     result.shapes.append(node.shape)
     result.shapes.append(xform)
 
   for c in node.get_children():
     if c is Node3D:
-      _collect(c, xform * c.transform, result)
+      _collect(c, xform * c.transform, result, in_area)
 
 # copy the mesh and bake in the material it actually renders with
 func _bake_mesh(node: MeshInstance3D) -> Mesh:
