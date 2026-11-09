@@ -56,13 +56,14 @@ var item_list: ItemList
 
 var selected_item := GridMap.INVALID_CELL_ITEM
 var rotation_index := 0
-var level := 0   # work-plane layer (cell y) used when the ray hits no block
-var drag_y := 0  # layer locked while drag-painting
+var level := 0 # work-plane layer (cell y) used when the ray hits no block
+var drag_y := 0 # layer locked while drag-painting
 
 var target_cell := Vector3i.ZERO
 var has_target := false
 var erasing := false
 var painting := false
+var click_held := false # a left click we consumed is still down
 var stroke := {} # cell -> [old_item, old_orientation] for the current drag
 var last_mouse := Vector2.ZERO
 
@@ -140,6 +141,7 @@ func _detach() -> void:
   lib = null
   has_target = false
   painting = false
+  click_held = false
   stroke.clear()
 
 func _build_panel() -> void:
@@ -243,51 +245,65 @@ func _refresh_layer_label() -> void:
 
 # ---------------------------------------------------------------- input
 
-func _forward_3d_gui_input(camera: Camera3D, event: InputEvent) -> int:
-  assert(grid != null, "gridmap_placer: input received with no GridMap attached")
-  if not enabled_check.button_pressed:
-    return AFTER_GUI_INPUT_PASS
+# The built-in GridMap editor is ahead of this plugin in the 3D input chain and stops the
+# click first, so _forward_3d_gui_input never fires. _input runs before any GUI handling,
+# so consuming the event here is what actually keeps the editor from seeing it.
+# Needs Godot 4.3+ (Viewport.gui_get_hovered_control).
 
-  if event is InputEventMouseMotion:
-    last_mouse = event.position
-    if not painting:
-      erasing = event.shift_pressed
-    _update_target(camera)
-    if painting:
-      if has_target:
-        _apply(target_cell)
-      return AFTER_GUI_INPUT_STOP
-    return AFTER_GUI_INPUT_PASS
+func _input(event: InputEvent) -> void:
+  if grid == null or not enabled_check.button_pressed: return
 
-  if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
-    if event.pressed:
-      if event.alt_pressed or event.ctrl_pressed or event.meta_pressed:
-        return AFTER_GUI_INPUT_PASS
-      last_mouse = event.position
-      erasing = event.shift_pressed
-      _update_target(camera)
-      if not has_target:
-        return AFTER_GUI_INPUT_PASS
-      if not erasing and selected_item == GridMap.INVALID_CELL_ITEM:
-        push_warning("gridmap_placer: no tile selected in the palette")
-        return AFTER_GUI_INPUT_STOP
-      painting = true
-      drag_y = target_cell.y
-      if not erasing:
-        level = target_cell.y
-        _refresh_layer_label()
-      _apply(target_cell)
-      return AFTER_GUI_INPUT_STOP
+  # a click we consumed must also have its release consumed, even outside the viewport
+  if click_held and event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
+    click_held = false
     if painting:
       painting = false
       _commit_stroke()
-      _update_target(camera)
-      return AFTER_GUI_INPUT_STOP
-    return AFTER_GUI_INPUT_PASS
+    _consume()
+    return
+
+  var vp := _hovered_viewport()
+  if vp == null:
+    if has_target:
+      has_target = false
+      _update_visuals()
+    return
+  var camera := vp.get_camera_3d()
+  var container := vp.get_parent() as SubViewportContainer
+
+  if event is InputEventMouseMotion:
+    last_mouse = (event.position - container.global_position) / container.stretch_shrink
+    if not painting:
+      erasing = event.shift_pressed
+    _update_target(camera)
+    if painting and has_target:
+      _apply(target_cell)
+    return # motion is never consumed, so orbit/pan keep working
+
+  if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+    if event.alt_pressed:
+      return # alt+click is camera navigation
+    last_mouse = (event.position - container.global_position) / container.stretch_shrink
+    erasing = event.shift_pressed
+    click_held = true
+    _consume() # always, otherwise the built-in tool places its own block
+    _update_target(camera)
+    if not has_target: return
+    if not erasing and selected_item == GridMap.INVALID_CELL_ITEM:
+      push_warning("gridmap_placer: no tile selected in the palette")
+      return
+    painting = true
+    drag_y = target_cell.y
+    if not erasing:
+      level = target_cell.y
+      _refresh_layer_label()
+    _apply(target_cell)
+    return
 
   if event is InputEventKey and event.pressed and not event.echo:
-    if event.ctrl_pressed or event.alt_pressed or event.meta_pressed:
-      return AFTER_GUI_INPUT_PASS
+    if event.ctrl_pressed or event.alt_pressed or event.meta_pressed: return
+    var focus := get_viewport().gui_get_focus_owner()
+    if focus is LineEdit or focus is TextEdit: return
     match event.keycode:
       KEY_BRACKETLEFT:
         _cycle_item(-1)
@@ -301,12 +317,21 @@ func _forward_3d_gui_input(camera: Camera3D, event: InputEvent) -> int:
       KEY_PAGEDOWN:
         level -= 1
         _refresh_layer_label()
-      _:
-        return AFTER_GUI_INPUT_PASS
+      _: return
     _update_target(camera)
-    return AFTER_GUI_INPUT_STOP
+    _consume()
 
-  return AFTER_GUI_INPUT_PASS
+func _consume() -> void:
+  get_viewport().set_input_as_handled()
+
+# the 3D viewport whose container is directly under the mouse (not a toolbar button on top of it)
+func _hovered_viewport() -> SubViewport:
+  var hovered := get_viewport().gui_get_hovered_control()
+  for i in 4:
+    var vp := EditorInterface.get_editor_viewport_3d(i)
+    if vp.get_parent() == hovered:
+      return vp
+  return null
 
 # ---------------------------------------------------------------- targeting
 
@@ -374,7 +399,7 @@ func _march(o: Vector3, d: Vector3) -> Dictionary:
     t_max[axis] += t_delta[axis]
     if grid.get_cell_item(cell) != GridMap.INVALID_CELL_ITEM:
       var normal := Vector3i.ZERO
-      normal[axis] = -step[axis]
+      normal[axis] = - step[axis]
       return {"t": t, "cell": cell, "normal": normal}
   return {}
 
