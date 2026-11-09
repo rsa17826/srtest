@@ -29,7 +29,7 @@ var win_spin_rate := 0.0 # extra turns per second, ramps up
 var winTimer := 0.0 # extra turns per second, ramps up
 
 # --- REPLAY SYSTEM VARIABLES ---
-enum ReplayMode {NORMAL, RECORDING, REPLAYING}
+enum ReplayMode {NORMAL, RECORDING, REPLAYING, VIEWING}
 var current_mode = ReplayMode.NORMAL
 var replay_buffer: Array = []
 var replay_frame_index: int = 0
@@ -76,7 +76,7 @@ func press(key):
   trypress[key] = KEY_MAX_BUFFER
 
 func _input(event):
-  if current_mode == ReplayMode.REPLAYING: return
+  if current_mode == ReplayMode.REPLAYING or current_mode == ReplayMode.VIEWING: return
 
   if event is InputEventMouseButton:
     Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
@@ -99,13 +99,13 @@ func die():
   velocity = Vector3.ZERO
 
 func _unhandled_input(event):
+  if current_mode == ReplayMode.VIEWING: return
   if event.is_action_pressed("restart"):
     die()
   # if event.is_action_pressed("ui_focus_next"):
   #   if current_mode == ReplayMode.NORMAL:
   #     position = Vector3.ZERO
   #     velocity = Vector3.ZERO
-  #     start_recording()
   #   elif current_mode == ReplayMode.RECORDING:
   #     stop_recording()
   # if event.is_action_pressed("ui_accept") and current_mode == ReplayMode.NORMAL:
@@ -172,6 +172,7 @@ func start_replay():
   log.pp("--- REPLAY STARTED ---")
 
 func _physics_process(delta: float) -> void:
+  if current_mode == ReplayMode.VIEWING: return   # first line, before `if winning:`
   if winning:
     winTimer += delta
     win_fade = global.rerange(winTimer, 0, 1, 0, 8)
@@ -266,6 +267,9 @@ func _physics_process(delta: float) -> void:
   # --- 5. EXECUTE MOVEMENT ---
   move_and_slide()
   if touching_hazard():
+    if current_mode == ReplayMode.RECORDING:
+      replay_buffer[replay_frame_index].expected_end_position = global_transform.origin
+      replay_frame_index += 1
     die()
     return
 

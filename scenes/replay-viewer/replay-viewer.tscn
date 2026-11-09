@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bh28ysg0skhc2"]
+
+[ext_resource type="Script" uid="uid://wd2wpdhg8o73" path="res://scenes/replay-viewer/replay_viewer.gd" id="1_m4euj"]
+
+[node name="replay-viewer" type="CanvasLayer" unique_id=1026408934]
+script = ExtResource("1_m4euj")
