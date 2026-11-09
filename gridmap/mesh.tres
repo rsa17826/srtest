@@ -1,6 +1,6 @@
 [gd_resource type="MeshLibrary" format=3 uid="uid://diobrekf3wpt1"]
 
-[ext_resource type="Shader" uid="uid://cauwhkcmtwcy6" path="res://shaders/main.gdshader" id="1_b5ih1"]
+[ext_resource type="Shader" uid="uid://ce4t87cewkgr1" path="res://shaders/hologram.gdshader" id="1_5c8e7"]
 [ext_resource type="Shader" uid="uid://bf28n0ll6cxyg" path="res://shaders/spiky.gdshader" id="2_88ns5"]
 [ext_resource type="Shader" uid="uid://bpnhxqtcofqqf" path="res://shaders/spiky-floor.gdshader" id="3_5c8e7"]
 [ext_resource type="Shader" uid="uid://bcotj215vij15" path="res://shaders/goal.gdshader" id="4_88ns5"]
@@ -8,24 +8,23 @@
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_lh8ei"]
 render_priority = 0
-shader = ExtResource("1_b5ih1")
-shader_parameter/base_color = Color(0.08, 0.09, 0.14, 1)
-shader_parameter/line_color = Color(0.8740201, 0.39386892, 1, 1)
-shader_parameter/cell_size = 1.0
-shader_parameter/line_width = 0.03
-shader_parameter/emission_strength = 1.5
-shader_parameter/move_color = Color(0.21016797, 0.0030127924, 0.29356346, 1)
-shader_parameter/move_dir = Vector2(0.5, 1)
-shader_parameter/move_speed = 0.5
-shader_parameter/move_spacing = 0.5
-shader_parameter/move_width = 0.015
-shader_parameter/move_emission = 2.0
-shader_parameter/spike_size = 0.2
-shader_parameter/spike_height = 0.12
-shader_parameter/spike_width = 0.25
-shader_parameter/spike_speed = 1.0
-shader_parameter/spike_pulse = 0.5
-shader_parameter/spike_randomness = 0.5
+shader = ExtResource("1_5c8e7")
+shader_parameter/color = Color(4.2114408e-08, 0.1647889, 0.20526299, 1)
+shader_parameter/base_alpha = 0.29600001406
+shader_parameter/rim_power = 1.13600003021
+shader_parameter/rim_strength = 1.2
+shader_parameter/intensity = 2.3770001129075
+shader_parameter/half_size = 0.5
+shader_parameter/edge_width = 0.06
+shader_parameter/edge_strength = 2.6150001242125
+shader_parameter/scan_density = 40.0
+shader_parameter/scan_speed = 1.5
+shader_parameter/scan_strength = 0.35
+shader_parameter/sweep_speed = 0.25
+shader_parameter/sweep_period = 12.0
+shader_parameter/sweep_strength = 1.0
+shader_parameter/flicker = 0.12
+shader_parameter/glitch = 0.04
 
 [sub_resource type="BoxMesh" id="BoxMesh_5c8e7"]
 material = SubResource("ShaderMaterial_lh8ei")
