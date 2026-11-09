@@ -68,6 +68,7 @@ func _build_ui() -> void:
   panel = PanelContainer.new()
   panel.theme = SystemUI.theme()
   SystemUI.add_brackets(panel)
+  SystemUI.pulse(panel)
   panel.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
   panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
   add_child(panel)

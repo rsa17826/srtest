@@ -6,6 +6,10 @@ var header: VBoxContainer
 var window: PanelContainer
 
 func _ready() -> void:
+  get_window().transparent = true
+  get_window().borderless = true
+  get_window().mode = Window.MODE_MAXIMIZED
+
   theme = SystemUI.theme()
   Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
   set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -38,6 +42,7 @@ func _ready() -> void:
   vbox.add_child(SystemUI.dim_label("REPLAYS ARE SAVED TO user://replays/<level>/"))
   _show_levels()
   SystemUI.fade_in(window)
+  SystemUI.pulse(window)
 
 func _clear() -> void:
   for c in content.get_children():

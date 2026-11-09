@@ -48,9 +48,6 @@ func _init() -> void:
 
 func _ready():
   assert(not -1 in hazard_ids, "hazard tile name missing from mesh library")
-  get_window().transparent = true
-  get_window().borderless = true
-  get_window().mode = Window.MODE_MAXIMIZED
   cpPos = startPos
 
 func touching_hazard() -> bool:
