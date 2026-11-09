@@ -14,6 +14,12 @@ var currentUserMoveSpeed: float = 0
 var currentUserJumpHeight: float = 0
 
 var winning := false
+var win_fx: MeshInstance3D
+var win_mat: ShaderMaterial
+var win_fade := 0.0
+var win_cell: Vector3i
+var win_item := GridMap.INVALID_CELL_ITEM
+var win_orient := 0
 
 # --- REPLAY SYSTEM VARIABLES ---
 enum ReplayMode {NORMAL, RECORDING, REPLAYING}
@@ -157,6 +163,8 @@ func start_replay():
 
 func _physics_process(delta: float) -> void:
   if winning:
+    win_fade += delta * 4.0
+    win_mat.set_shader_parameter("top_fade", win_fade)
     global_position.y += 10 * delta
     return
   # var cell := grid.local_to_map(grid.to_local(global_position - Vector3(0, playerHeight + .01, 0)))
@@ -287,7 +295,31 @@ func check_desync(frame: int):
     print_rich("[color=red][DESYNC Frame %d][/color] Drift: %.4f units. Expected %s, Got %s" % [frame, distance, recorded_pos, actual_pos])
     global_transform.origin = recorded_pos
 
-func win(goal: Node3D):
+func win(goal: Area3D) -> void:
   global_position.x = goal.global_position.x
   global_position.z = goal.global_position.z
   winning = true
+
+  win_cell = goal.get_meta("cell")
+  win_item = grid.get_cell_item(win_cell)
+  win_orient = grid.get_cell_item_orientation(win_cell)
+  assert(win_item != GridMap.INVALID_CELL_ITEM, "goal cell is empty")
+
+  var lib := grid.mesh_library
+  var mesh := lib.get_item_mesh(win_item)
+  win_mat = mesh.surface_get_material(0).duplicate() # private copy, other goals are untouched
+  win_fade = win_mat.get_shader_parameter("top_fade")
+
+  win_fx = MeshInstance3D.new()
+  win_fx.mesh = mesh
+  win_fx.material_override = win_mat
+  win_fx.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+  grid.add_child(win_fx)
+  win_fx.transform = Transform3D(grid.get_cell_item_basis(win_cell), grid.map_to_local(win_cell)) \
+      * lib.get_item_mesh_transform(win_item)
+  grid.set_cell_item(win_cell, GridMap.INVALID_CELL_ITEM) # hide the shared cell, the copy replaces it
+
+func end_win() -> void:
+  winning = false
+  win_fx.queue_free()
+  grid.set_cell_item(win_cell, win_item, win_orient)

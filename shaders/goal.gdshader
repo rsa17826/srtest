@@ -6,7 +6,7 @@ uniform vec4 accent : source_color = vec4(0.85, 0.97, 1.0, 1.0);
 uniform float height = 20.0;               // must match the mesh height
 uniform float intensity = 1.5;             // above 1 so glow/bloom picks it up
 uniform float fill : hint_range(0.0, 1.0) = 0.1;   // base translucency of the column
-uniform float top_fade : hint_range(0.0, 1.0) = 0.6; // fraction of height spent fading out
+uniform float top_fade : hint_range(0.0, 20.0) = 0.6; // fraction of height spent fading out
 uniform float edge_power = 2.5;
 uniform float edge_strength = 0.8;
 
