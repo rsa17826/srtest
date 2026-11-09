@@ -288,6 +288,7 @@ func _simulate(buf: Array) -> void:
     fake.rotation = f.fake_cam_rotation
     player.trypress.jump = f.trypress_jump
     player.step(f.delta, f.input_dir)
+    log.pp(player.global_position.distance_to(f.expected_end_position), i)
     if first_diverge == -1 and player.global_position.distance_to(f.expected_end_position) > DIVERGE_EPS:
       first_diverge = i
   positions[n] = player.global_position
