@@ -7,7 +7,7 @@ func _init() -> void:
 
 func _ready() -> void:
   for area in spawn_areas(gridmap, "goal"):
-    area.body_entered.connect(func(body): body.win(area))
+    area.body_entered.connect(func(body): if body is Player: body.win(area))
 
   var sky_mat := ProceduralSkyMaterial.new()
   sky_mat.sky_top_color = Color("#3d6fb5")
@@ -63,7 +63,7 @@ func spawn_areas(grid: GridMap, tile: String) -> Array[Area3D]:
   var areas: Array[Area3D] = []
   for cell in grid.get_used_cells_by_item(id):
     var area: Area3D = template.duplicate()
-    area.set_meta("cell", cell)   # new line
+    area.set_meta("cell", cell) # new line
     grid.add_child(area)
     var cell_xform := Transform3D(grid.get_cell_item_basis(cell), grid.map_to_local(cell))
     area.transform = cell_xform * rel

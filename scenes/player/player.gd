@@ -1,4 +1,5 @@
 extends CharacterBody3D
+class_name Player
 
 const USER_MOVE_SPEED = 5.5
 const JUMP_SPEED_BOOST = 1.5
@@ -20,6 +21,9 @@ var win_fade := 0.0
 var win_cell: Vector3i
 var win_item := GridMap.INVALID_CELL_ITEM
 var win_orient := 0
+var win_spin := 0.0 # extra rotation so far, in turns
+var win_spin_rate := 0.0 # extra turns per second, ramps up
+var winTimer := 0.0 # extra turns per second, ramps up
 
 # --- REPLAY SYSTEM VARIABLES ---
 enum ReplayMode {NORMAL, RECORDING, REPLAYING}
@@ -163,8 +167,17 @@ func start_replay():
 
 func _physics_process(delta: float) -> void:
   if winning:
-    win_fade += delta * 4.0
+    winTimer += delta
+    win_fade = global.rerange(winTimer, 0, 1, 0, 8)
+    if winTimer >= 1:
+      end_win()
+    var a = global.rerange_clamp(winTimer, 0, .75, 1.5, 0)
+    win_spin_rate = global.rerange_clamp(winTimer, 0, 1, -.05, -10)
+    log.pp(win_spin_rate)
+    win_spin += win_spin_rate * delta
     win_mat.set_shader_parameter("top_fade", win_fade)
+    win_mat.set_shader_parameter("intensity", a)
+    win_mat.set_shader_parameter("spin_offset", win_spin)
     global_position.y += 10 * delta
     return
   # var cell := grid.local_to_map(grid.to_local(global_position - Vector3(0, playerHeight + .01, 0)))
@@ -299,6 +312,9 @@ func win(goal: Area3D) -> void:
   global_position.x = goal.global_position.x
   global_position.z = goal.global_position.z
   winning = true
+  win_spin = 0.0
+  win_spin_rate = 0.0
+  winTimer = 0
 
   win_cell = goal.get_meta("cell")
   win_item = grid.get_cell_item(win_cell)

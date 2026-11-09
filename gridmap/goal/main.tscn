@@ -18,10 +18,12 @@ shader_parameter/color = Color(0.2, 0.7, 1, 1)
 shader_parameter/accent = Color(0.85, 0.97, 1, 1)
 shader_parameter/height = 20.0
 shader_parameter/intensity = 1.5
-shader_parameter/fill = 0.0
+shader_parameter/fill = 0.0010000000475
 shader_parameter/top_fade = 0.6
 shader_parameter/edge_power = 2.5
 shader_parameter/edge_strength = 1.5550000000000002
+shader_parameter/spin_speed = -0.05
+shader_parameter/spin_offset = 0.0
 shader_parameter/panel_count = 4.0
 shader_parameter/window_height = 3.0
 shader_parameter/frame_width = 0.06
@@ -42,7 +44,7 @@ radius = 1.5
 [node name="root" type="Node3D" unique_id=818926986]
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1224317292]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9.5, 0)
 cast_shadow = 0
 mesh = SubResource("CylinderMesh_uirjs")
 surface_material_override/0 = SubResource("ShaderMaterial_mwww4")

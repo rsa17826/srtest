@@ -9,6 +9,8 @@ uniform float fill : hint_range(0.0, 1.0) = 0.1;   // base translucency of the c
 uniform float top_fade : hint_range(0.0, 20.0) = 0.6; // fraction of height spent fading out
 uniform float edge_power = 2.5;
 uniform float edge_strength = 0.8;
+uniform float spin_speed = 0.05;   // turns per second, positive = clockwise seen from above
+uniform float spin_offset = 0.0;   // extra rotation in turns, driven from script while winning
 
 // system-window panels
 uniform float panel_count = 4.0;           // panels around the circumference (integer)
@@ -55,7 +57,7 @@ void vertex() {
 void fragment() {
   float y = local_pos.y + height * 0.5;          // distance up from the base
   float yn = clamp(y / height, 0.0, 1.0);
-  float ang = atan(local_pos.x, local_pos.z) / TAU + 0.5;
+  float ang = fract(atan(local_pos.x, local_pos.z) / TAU + 0.5 + TIME * spin_speed + spin_offset);
 
   // panel / window coordinates
   float pa = ang * panel_count;

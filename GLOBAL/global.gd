@@ -564,6 +564,10 @@ func randfrom(min: float, max: float) -> int:
   #   return min[randfrom(0, len(min) - 1)]
   return int(randf() * (max - min + 1) + min)
 
+func rerange_clamp(val: Variant, low1: Variant, high1: Variant, low2: Variant, high2: Variant) -> Variant:
+  var min = low2 if low2 < high2 else high2
+  var max = low2 if low2 > high2 else high2
+  return clamp(self.rerange(val, low1, high1, low2, high2), min, max)
 func rerange(val: Variant, low1: Variant, high1: Variant, low2: Variant, high2: Variant) -> Variant:
   if typeof(val) == typeof(0) or typeof(val) == typeof(0.0):
     val = float(val)
