@@ -14,6 +14,8 @@ const upgravity: float = 22
 var currentUserMoveSpeed: float = 0
 var currentUserJumpHeight: float = 0
 
+var cpPos := Vector3.ZERO
+
 var winning := false
 var win_fx: MeshInstance3D
 var win_mat: ShaderMaterial
@@ -22,7 +24,7 @@ var win_cell: Vector3i
 var win_item := GridMap.INVALID_CELL_ITEM
 var win_orient := 0
 var win_spin := 0.0 # extra rotation so far, in turns
-var startY := 0.0 # extra rotation so far, in turns
+var win_startY := 0.0 # extra rotation so far, in turns
 var win_spin_rate := 0.0 # extra turns per second, ramps up
 var winTimer := 0.0 # extra turns per second, ramps up
 
@@ -33,7 +35,8 @@ var replay_buffer: Array = []
 var replay_frame_index: int = 0
 const DESYNC_THRESHOLD: float = 0.001
 # -------------------------------
-
+func _init() -> void:
+  global.player = self
 @onready var grid: GridMap = global.level.gridmap
 @onready var hazard_ids := [
   grid.mesh_library.find_item_by_name("spiky floor"),
@@ -48,6 +51,7 @@ func _ready():
   get_window().transparent = true
   get_window().borderless = true
   get_window().mode = Window.MODE_MAXIMIZED
+  cpPos = startPos
 
 func touching_hazard() -> bool:
   for i in get_slide_collision_count():
@@ -177,7 +181,7 @@ func _physics_process(delta: float) -> void:
     win_mat.set_shader_parameter("top_fade", win_fade)
     win_mat.set_shader_parameter("intensity", global.rerange_clamp(winTimer, 0, .75, 1.5, 0))
     win_mat.set_shader_parameter("spin_offset", win_spin)
-    global_position.y = startY + global.rerange_clamp(winTimer, 0, 1, 0, 10)
+    global_position.y = win_startY + global.rerange_clamp(winTimer, 0, 1, 0, 10)
     return
   # var cell := grid.local_to_map(grid.to_local(global_position - Vector3(0, playerHeight + .01, 0)))
   var has2 = []
@@ -313,7 +317,7 @@ func win(goal: Area3D) -> void:
   end_win() # undo a leftover effect from an earlier win that was never cleaned up
   global_position.x = goal.global_position.x
   global_position.z = goal.global_position.z
-  startY = global_position.y
+  win_startY = global_position.y
   winning = true
   win_spin = 0.0
   win_spin_rate = 0.0
@@ -345,3 +349,5 @@ func end_win() -> void:
   win_fx.queue_free()
   win_fx = null
   grid.set_cell_item(win_cell, win_item, win_orient)
+func setCheckpoint(pos: Vector3):
+  cpPos = pos

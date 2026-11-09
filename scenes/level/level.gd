@@ -8,9 +8,12 @@ func _init() -> void:
 func _ready() -> void:
   for area in spawn_areas(gridmap, "goal"):
     area.body_entered.connect(func(body): if body is Player: body.win(area))
-  # TODO
-  # for area in spawn_areas(gridmap, "cp"):
-  #   area.body_entered.connect(func(body): if body is Player: area.get_parent().collect())
+
+  var cp_areas := spawn_areas(gridmap, "cp") # must run before the cells are replaced
+  var cp_panes := replace_with_nodes(gridmap, "cp")
+  for area in cp_areas:
+    var pane: MeshInstance3D = cp_panes[area.get_meta("cell")]
+    area.body_entered.connect(func(body): if body is Player: collect_checkpoint(pane))
 
   var sky_mat := ProceduralSkyMaterial.new()
   sky_mat.sky_top_color = Color("#3d6fb5")
@@ -82,3 +85,29 @@ func _relative_transform(node: Node3D, root: Node) -> Transform3D:
     x = node.transform * x
     node = node.get_parent()
   return x
+# swaps every cell of a tile for a standalone MeshInstance3D, returns cell -> node
+func replace_with_nodes(grid: GridMap, tile: String) -> Dictionary:
+  var lib := grid.mesh_library
+  var id := lib.find_item_by_name(tile)
+  assert(id != -1, "no tile named '%s' in the mesh library" % tile)
+  var mesh := lib.get_item_mesh(id)
+  var mesh_xform := lib.get_item_mesh_transform(id)
+
+  var nodes := {}
+  for cell in grid.get_used_cells_by_item(id):
+    var mi := MeshInstance3D.new()
+    mi.mesh = mesh
+    mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+    grid.add_child(mi)
+    mi.transform = Transform3D(grid.get_cell_item_basis(cell), grid.map_to_local(cell)) * mesh_xform
+    nodes[cell] = mi
+    grid.set_cell_item(cell, GridMap.INVALID_CELL_ITEM)
+  return nodes
+
+func collect_checkpoint(pane: MeshInstance3D) -> void:
+  if pane.has_meta("collected"): return
+  pane.set_meta("collected", true)
+  create_tween().tween_method(
+    func(v: float) -> void: pane.set_instance_shader_parameter("collected", v),
+    0.0, 1.0, 0.8)
+  global.player.setCheckpoint(pane.global_position)
