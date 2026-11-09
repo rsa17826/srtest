@@ -89,6 +89,7 @@ func _input(event):
 @onready var startPos = position
 
 func die():
+  end_win()
   position = startPos
   velocity = Vector3.ZERO
 
@@ -309,6 +310,9 @@ func check_desync(frame: int):
     global_transform.origin = recorded_pos
 
 func win(goal: Area3D) -> void:
+  if winning:
+    return # contact fired again while the effect is already running
+  end_win() # undo a leftover effect from an earlier win that was never cleaned up
   global_position.x = goal.global_position.x
   global_position.z = goal.global_position.z
   winning = true
@@ -337,5 +341,8 @@ func win(goal: Area3D) -> void:
 
 func end_win() -> void:
   winning = false
+  if win_fx == null:
+    return # no effect is active, nothing to undo
   win_fx.queue_free()
+  win_fx = null
   grid.set_cell_item(win_cell, win_item, win_orient)

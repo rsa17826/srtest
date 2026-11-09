@@ -1,0 +1,16 @@
+[gd_scene format=3 uid="uid://bttffdaolw7gj"]
+
+[ext_resource type="Script" uid="uid://1781di5ep1gw" path="res://scenes/input_remapping/keybinds_menu.gd" id="1_gpdjo"]
+
+[node name="Controls" type="CanvasLayer" unique_id=693935935]
+layer = 7
+
+[node name="Controls" type="Control" parent="." unique_id=2058721111]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_gpdjo")
+metadata/_edit_lock_ = true
