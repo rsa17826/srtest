@@ -176,11 +176,16 @@ func start_replay():
   log.pp("--- REPLAY STARTED ---")
 
 func _physics_process(delta: float) -> void:
+  delta = 1 / 60.0
+  var playback_delta = delta
   if current_mode == ReplayMode.VIEWING: return # first line, before `if winning:`
   if winning:
     winTimer += delta
     win_fade = global.rerange(winTimer, 0, 1, 0, 8)
+    if current_mode == ReplayMode.RECORDING:
+      record_frame(playback_delta)
     if winTimer >= 1:
+      stop_recording()
       end_win()
     win_spin = global.rerange_clamp(winTimer, 0, 1, -.05, -4)
     win_mat.set_shader_parameter("top_fade", win_fade)
@@ -190,8 +195,6 @@ func _physics_process(delta: float) -> void:
     return
   # var cell := grid.local_to_map(grid.to_local(global_position - Vector3(0, playerHeight + .01, 0)))
   var has2 = []
-  delta = 1 / 60.0
-  var playback_delta = delta
 
   # --- 1. STATE RESTORATION OR INPUT UPDATE ---
   if current_mode == ReplayMode.REPLAYING:
@@ -349,7 +352,6 @@ func win(goal: Area3D) -> void:
   win_fx.transform = Transform3D(grid.get_cell_item_basis(win_cell), grid.map_to_local(win_cell)) \
       * lib.get_item_mesh_transform(win_item)
   grid.set_cell_item(win_cell, GridMap.INVALID_CELL_ITEM) # hide the shared cell, the copy replaces it
-  stop_recording()
 
 func end_win() -> void:
   winning = false

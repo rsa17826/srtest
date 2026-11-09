@@ -26,6 +26,13 @@ var saved_layer: int
 var saved_cam_rot: Vector3
 var saved_mouse_mode: Input.MouseMode
 
+# checkpoints (level.checkpoints = [{"area": Area3D, "pane": MeshInstance3D}, ...])
+var cps: Array
+var cp_first: Array[int] = [] # first frame each checkpoint is touched, -1 = never
+var cp_state: Array[bool] = [] # currently shown as collected?
+var cp_tweens := {}
+var saved_cp: Array[float] = []
+
 # free camera
 var flying := false
 var fly_cam: Camera3D
@@ -136,6 +143,14 @@ func open() -> void:
   saved_cam_rot = player.get_node("cam").rotation
   saved_mouse_mode = Input.mouse_mode
 
+  cps = global.level.checkpoints
+  saved_cp.clear()
+  cp_state.clear()
+  for cp in cps:
+    saved_cp.append(cp.pane.get_instance_shader_parameter("collected"))
+    cp.pane.set_instance_shader_parameter("collected", 0.0) # viewer drives them from here
+    cp_state.append(false)
+
   player.current_mode = Player.ReplayMode.VIEWING
   player.velocity = Vector3.ZERO
   player.collision_layer = 0 # so goal / checkpoint Area3Ds don't fire while scrubbing
@@ -162,6 +177,11 @@ func close() -> void:
   marker.queue_free()
   marker = null
 
+  for c in cps.size():
+    if cp_tweens.has(c):
+      cp_tweens[c].kill()
+    cps[c].pane.set_instance_shader_parameter("collected", saved_cp[c])
+  cp_tweens.clear()
   player.collision_layer = saved_layer
   player.global_position = saved_pos
   player.velocity = saved_vel
@@ -214,6 +234,7 @@ func _compile() -> void:
   positions[n] = buf[n - 1].expected_end_position
   cam_rots[n] = buf[n - 1].cam_rotation
   frame_time = total / n
+  _find_checkpoint_frames()
 
   slider.max_value = n
   playhead = 0.0
@@ -221,6 +242,46 @@ func _compile() -> void:
   _set_controls_enabled(true)
   _apply_playhead()
   _update_info()
+
+# ---------------------------------------------------------------- checkpoints
+# Player collision is off while viewing, so Area3Ds never fire. Instead, find the frame at
+# which the recorded path first overlaps each checkpoint area, then derive the state from the playhead.
+
+func _find_checkpoint_frames() -> void:
+  cp_first.clear()
+  cp_first.resize(cps.size())
+  cp_first.fill(-1)
+  var space := player.get_world_3d().direct_space_state
+  var shape_node: CollisionShape3D = player.get_node("CollisionShape3D")
+  var q := PhysicsShapeQueryParameters3D.new()
+  q.shape = shape_node.shape
+  q.collide_with_areas = true
+  q.collide_with_bodies = false
+  q.collision_mask = 0xFFFFFFFF
+  var remaining := cps.size()
+  for i in positions.size():
+    if remaining == 0: break
+    q.transform = Transform3D(Basis.IDENTITY, positions[i]) * shape_node.transform
+    for hit in space.intersect_shape(q, 32):
+      for c in cps.size():
+        if cp_first[c] == -1 and hit.collider == cps[c].area:
+          cp_first[c] = i
+          remaining -= 1
+
+func _apply_checkpoints() -> void:
+  for c in cps.size():
+    var want: bool = cp_first[c] != -1 and playhead >= cp_first[c]
+    if want == cp_state[c]: continue
+    cp_state[c] = want
+    var pane: MeshInstance3D = cps[c].pane
+    if cp_tweens.has(c):
+      cp_tweens[c].kill()
+    if want and playing: # collected during normal playback: play the wipe
+      var tw := create_tween()
+      tw.tween_method(func(v: float): pane.set_instance_shader_parameter("collected", v), 0.0, 1.0, 0.6)
+      cp_tweens[c] = tw
+    else: # seeking / stepping: snap
+      pane.set_instance_shader_parameter("collected", 1.0 if want else 0.0)
 
 # ---------------------------------------------------------------- playback
 
@@ -282,6 +343,7 @@ func _apply_playhead() -> void:
   marker.global_position = pos
   marker.rotation.y = rot.y
   slider.set_value_no_signal(playhead)
+  _apply_checkpoints()
 
 func _update_info() -> void:
   if not compiled:
@@ -391,7 +453,5 @@ func _fly(delta: float) -> void:
   if Input.is_physical_key_pressed(KEY_SHIFT): dir.y -= 1.0
   if dir == Vector3.ZERO: return
 
-  # same feel as 3dmove: slower up close to the subject, faster far away
-  var dist := maxf(0.5, fly_cam.global_position.distance_to(player.global_position))
-  var speed := clampf(FLY_SPEED * dist * 0.08 * fly_mult, 0.5, 250.0)
+  var speed := clampf(FLY_SPEED * fly_mult, 0.5, 250.0)
   fly_cam.global_position += dir.normalized() * speed * delta

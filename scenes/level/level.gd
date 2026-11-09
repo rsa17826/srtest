@@ -4,15 +4,17 @@ class_name Level
 @export var gridmap: GridMap
 func _init() -> void:
   global.level = self
+var checkpoints: Array = []
 
 func _ready() -> void:
   for area in spawn_areas(gridmap, "goal"):
     area.body_entered.connect(func(body): if body is Player: body.win(area))
 
-  var cp_areas := spawn_areas(gridmap, "cp") # must run before the cells are replaced
+  var cp_areas := spawn_areas(gridmap, "cp")
   var cp_panes := replace_with_nodes(gridmap, "cp")
   for area in cp_areas:
     var pane: MeshInstance3D = cp_panes[area.get_meta("cell")]
+    checkpoints.append({"area": area, "pane": pane})
     area.body_entered.connect(func(body): if body is Player: collect_checkpoint(pane))
 
   var sky_mat := ProceduralSkyMaterial.new()
