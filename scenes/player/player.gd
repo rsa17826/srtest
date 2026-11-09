@@ -47,8 +47,8 @@ func getTileId(name):
   getTileId("spiky box"),
   getTileId("spiky ball"),
 ]
-@onready var playerHeight = $CollisionShape3D.shape.height / 2
-@onready var playerWidth = $CollisionShape3D.shape.radius / 2
+# @onready var playerHeight = $CollisionShape3D.shape.height / 2
+# @onready var playerWidth = $CollisionShape3D.shape.radius / 2
 
 func _ready():
   assert(not -1 in hazard_ids, "hazard tile name missing from mesh library")
@@ -314,7 +314,7 @@ func record_frame(delta: float):
     "currentUserJumpHeight": currentUserJumpHeight,
     "jumps": jumps,
     "kt": kt,
-    "trypress_jump": trypress.jump, # Captures accurately now!
+    "trypress_jump": trypress.jump,
     "cam_rotation": $cam.rotation,
     "fake_cam_rotation": $fake_cam.rotation
   }
