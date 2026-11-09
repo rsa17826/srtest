@@ -8,6 +8,8 @@ func _init() -> void:
 func _ready() -> void:
   for area in spawn_areas(gridmap, "goal"):
     area.body_entered.connect(func(body): if body is Player: body.win(area))
+  for area in spawn_areas(gridmap, "cp"):
+    area.body_entered.connect(func(body): if body is Player: area.get_parent().collect())
 
   var sky_mat := ProceduralSkyMaterial.new()
   sky_mat.sky_top_color = Color("#3d6fb5")

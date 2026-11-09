@@ -1,0 +1,46 @@
+[gd_scene format=3 uid="uid://pgk2evhj4rfr"]
+
+[ext_resource type="Shader" uid="uid://cfydnuwktwfju" path="res://shaders/cp.gdshader" id="1_2h5td"]
+[ext_resource type="Script" uid="uid://cs5fr7wvhbwr4" path="res://gridmap/cp/main.gd" id="1_yx0rl"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_2h5td"]
+render_priority = 0
+shader = ExtResource("1_2h5td")
+shader_parameter/pane_size = Vector2(3, 4)
+shader_parameter/blue = Color(0.1, 0.6, 1, 1)
+shader_parameter/blue_accent = Color(0.8, 0.95, 1, 1)
+shader_parameter/green = Color(0.1, 1, 0.4, 1)
+shader_parameter/green_accent = Color(0.85, 1, 0.85, 1)
+shader_parameter/wipe_softness = 0.3
+shader_parameter/intensity = 1.6
+shader_parameter/fill = 0.08
+shader_parameter/line_width = 0.012
+shader_parameter/grid_size = 0.25
+shader_parameter/scan_speed = 0.3
+shader_parameter/scan_strength = 0.35
+shader_parameter/dot_density = 8.0
+shader_parameter/dot_amount = 0.25
+shader_parameter/dot_size = 0.18
+shader_parameter/dot_drift = 0.15
+shader_parameter/flicker = 0.05
+
+[sub_resource type="QuadMesh" id="QuadMesh_x7okl"]
+material = SubResource("ShaderMaterial_2h5td")
+size = Vector2(3, 4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_fd6t1"]
+size = Vector3(3, 4, 0)
+
+[node name="root" type="Node3D" unique_id=818926986]
+script = ExtResource("1_yx0rl")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1224317292]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+cast_shadow = 0
+mesh = SubResource("QuadMesh_x7okl")
+metadata/_edit_lock_ = true
+
+[node name="Area3D" type="Area3D" parent="MeshInstance3D" unique_id=394266070]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshInstance3D/Area3D" unique_id=1952208622]
+shape = SubResource("BoxShape3D_fd6t1")
