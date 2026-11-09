@@ -230,7 +230,24 @@ func _make_marker(radius: float, height: float) -> Node3D:
 
 # ---------------------------------------------------------------- compile
 
+# move_and_slide() uses the *render* frame delta when it isn't called from a physics frame, which makes
+# every simulated step slightly (or wildly) the wrong length. So the actual work runs in _physics_process.
+var compile_requested := false
+
 func _compile() -> void:
+  compiled = false
+  playing = false
+  btn_play.text = "Play"
+  _set_controls_enabled(false)
+  info.text = "Compiling..."
+  compile_requested = true
+
+func _physics_process(_delta: float) -> void:
+  if compile_requested:
+    compile_requested = false
+    _do_compile()
+
+func _do_compile() -> void:
   var buf: Array = player.replay_buffer
   if buf.is_empty():
     info.text = "ERROR: player.replay_buffer is empty - record a run first"
@@ -260,6 +277,7 @@ func _compile() -> void:
 # the replay are used for frame 0 and for the "differs from recording" check, never to place the player.
 
 func _simulate(buf: Array) -> void:
+  assert(Engine.is_in_physics_frame(), "_simulate must run inside _physics_process (move_and_slide delta)")
   assert(Engine.physics_ticks_per_second == 60, "resimulation assumes 60 physics ticks per second")
   var n := buf.size()
   var cam: Node3D = player.get_node("cam")
@@ -297,8 +315,9 @@ func _simulate(buf: Array) -> void:
     positions[i] = player.global_position
     player.trypress.jump = f.trypress_jump
     player.step(f.delta, f.input_dir)
-    log.pp(player.global_position.distance_to(f.expected_end_position), i)
+    # log.pp(player.global_position.distance_to(f.expected_end_position), i)
     if first_diverge == -1 and player.global_position.distance_to(f.expected_end_position) > 0:
+      log.pp(player.global_position.distance_to(f.expected_end_position), i)
       log.pp(lastf, f)
       first_diverge = i
     lastf = f
