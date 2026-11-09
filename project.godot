@@ -188,5 +188,5 @@ fancy_folder_icons/textureAppliesToNestedFolders=true
 
 rendering_device/driver.windows="d3d12"
 lights_and_shadows/multi_bounce_occlusion/enabled=true
-anti_aliasing/quality/msaa_3d=2
+global_illumination/sdfgi/frames_to_converge=0
 environment/defaults/default_clear_color=Color(0.1, 0.3, 0.33, 0.5)
