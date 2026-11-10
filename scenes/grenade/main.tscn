@@ -1,8 +1,9 @@
 [gd_scene format=3 uid="uid://b8br3spquawgh"]
 
+[ext_resource type="Script" uid="uid://c03tnk4u721vi" path="res://scenes/grenade/grenade.gd" id="1_5atd4"]
 [ext_resource type="Shader" uid="uid://viue01pd4m5f" path="res://shaders/grenade.gdshader" id="1_lalbn"]
 
-[sub_resource type="SphereMesh" id="SphereMesh_p47bc"]
+[sub_resource type="SphereShape3D" id="SphereShape3D_lvxji"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_prv64"]
 render_priority = 0
@@ -15,7 +16,7 @@ shader_parameter/rim_power = 2.2
 shader_parameter/rim_strength = 1.3
 shader_parameter/lat_lines = 15.04
 shader_parameter/long_lines = 13.545
-shader_parameter/line_width = 0.011000000173240002
+shader_parameter/line_width = 0.01100000017324
 shader_parameter/line_strength = 2.0750000985625
 shader_parameter/scan_density = 43.5
 shader_parameter/scan_speed = 1.5
@@ -35,18 +36,17 @@ shader_parameter/glitch_row_chance = 0.3
 shader_parameter/glitch_shift = 0.4050000192375
 shader_parameter/glitch_split = 0.10000000149012
 
-[sub_resource type="SphereShape3D" id="SphereShape3D_lvxji"]
+[sub_resource type="SphereMesh" id="SphereMesh_p47bc"]
+material = SubResource("ShaderMaterial_prv64")
+radial_segments = 32
 
-[node name="root" type="Node3D" unique_id=818926986]
+[node name="root" type="CharacterBody3D" unique_id=1141150591]
+script = ExtResource("1_5atd4")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=151750376]
+shape = SubResource("SphereShape3D_lvxji")
+metadata/_edit_lock_ = true
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1224317292]
 mesh = SubResource("SphereMesh_p47bc")
-surface_material_override/0 = SubResource("ShaderMaterial_prv64")
-metadata/_edit_lock_ = true
-
-[node name="Area3D" type="Area3D" parent="MeshInstance3D" unique_id=212031447]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshInstance3D/Area3D" unique_id=151750376]
-visible = false
-shape = SubResource("SphereShape3D_lvxji")
 metadata/_edit_lock_ = true

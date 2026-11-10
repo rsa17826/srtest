@@ -511,6 +511,13 @@ static func coloritem(item: Variant, tab: int = -2, isarrafterdict: bool = false
     +", " \
     + getcolor("end") + coloritem(item.y) + getcolor("darkgreen") \
     +")" + getcolor("end")
+  if item is Vector3 or item is Vector3i:
+    return getcolor("darkgreen") \
+    + ("Vector3i" if item is Vector3i else "Vector3") + "(" + \
+    getcolor("end") + coloritem(item.x) + getcolor("darkgreen") \
+    +", " \
+    + getcolor("end") + coloritem(item.y) + getcolor("darkgreen") \
+    +")" + getcolor("end")
   if item is bool:
     return getcolor("blue") + str(item) + getcolor("end")
   if item is Color:

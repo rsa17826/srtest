@@ -32,6 +32,11 @@ var cps: Array
 var cp_first: Array[int] = [] # first frame each checkpoint is touched, -1 = never
 var cp_state: Array[bool] = [] # currently shown as collected?
 var cp_tweens := {}
+
+# grenades, as seen by the resimulation: per frame, an Array of Vector4(x, y, z, fuse 0..1)
+const GRENADE_SCENE := preload("res://scenes/grenade/main.tscn")
+var grenade_frames: Array = []
+var ghosts: Array[Grenade] = []
 var saved_cp: Array[float] = []
 
 # free camera
@@ -188,6 +193,7 @@ func close() -> void:
   playing = false
   btn_play.text = "Play"
   active = false
+  _free_ghosts()
   panel.hide()
   marker.queue_free()
   marker = null
@@ -304,6 +310,9 @@ func _simulate(buf: Array) -> void:
   player.kt = first.kt
 
   first_diverge = -1
+  player.clear_grenades()
+  grenade_frames.clear()
+  grenade_frames.resize(n)
   var lastf = null
   for i in n:
     var f = buf[i]
@@ -315,19 +324,48 @@ func _simulate(buf: Array) -> void:
       # the win animation is scripted (rises, snaps to the goal), so take it from the recording
       player.global_position = f.start_position
       positions[i] = f.start_position
+      grenade_frames[i] = []
       continue
     player.cpPos = f.cp_pos # checkpoints are not re-derived; respawns use the recorded one
     player.pending_restart = f.restart
+    player.pending_grenade = f.pending_grenade
     positions[i] = player.global_position
     player.trypress.jump = f.trypress_jump
     player.step(f.delta, f.input_dir)
+    var snap: Array = []
+    for g in player.grenades:
+      snap.append(Vector4(g.global_position.x, g.global_position.y, g.global_position.z, float(g.ticks) / Grenade.FUSE_TICKS))
+    grenade_frames[i] = snap
     if first_diverge == -1 and player.global_position.distance_to(f.expected_end_position) > 0:
       log.pp(player.global_position.distance_to(f.expected_end_position), i)
+      log.pp("on_floor:", player.is_on_floor(), "slide collisions:", player.get_slide_collision_count())
       log.pp(lastf, f)
       first_diverge = i
     lastf = f
   positions[n] = buf[n - 1].expected_end_position if buf[n - 1].winning else player.global_position
   cam_rots[n] = buf[n - 1].cam_rotation
+  player.clear_grenades() # the resimulation's grenades were only needed for their effect on the player
+
+# ---------------------------------------------------------------- grenades
+# Frame i's snapshot is the state at the END of frame i, i.e. what the player sees at playhead i + 1.
+
+func _show_grenades() -> void:
+  var j := int(roundf(playhead)) - 1
+  var snap: Array = grenade_frames[j] if j >= 0 else []
+  while ghosts.size() < snap.size():
+    var gh: Grenade = GRENADE_SCENE.instantiate()
+    player.get_parent().add_child(gh)
+    ghosts.append(gh)
+  for k in ghosts.size():
+    ghosts[k].visible = k < snap.size()
+    if k < snap.size():
+      ghosts[k].global_position = Vector3(snap[k].x, snap[k].y, snap[k].z)
+      ghosts[k].mesh.set_instance_shader_parameter("fuse", snap[k].w)
+
+func _free_ghosts() -> void:
+  for gh in ghosts:
+    gh.queue_free()
+  ghosts.clear()
 
 # ---------------------------------------------------------------- checkpoints
 # Player collision is off while viewing, so Area3Ds never fire. Instead, find the frame at
@@ -429,6 +467,7 @@ func _apply_playhead() -> void:
   marker.global_position = pos
   marker.rotation.y = rot.y
   slider.set_value_no_signal(playhead)
+  _show_grenades()
   _apply_checkpoints()
 
 func _update_info() -> void:

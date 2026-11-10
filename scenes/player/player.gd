@@ -34,7 +34,8 @@ var current_mode = ReplayMode.NORMAL
 var replay_buffer: Array = []
 var replay_frame_index: int = 0
 var pending_restart := false # restart pressed since the last recorded frame
-var pending_grenade := false # restart pressed since the last recorded frame
+var pending_grenade := false # grenade pressed since the last recorded frame
+var grenades: Array[Grenade] = [] # ticked by step(), never by their own _physics_process
 const DESYNC_THRESHOLD: float = 0.001
 # -------------------------------
 func _init() -> void:
@@ -104,8 +105,10 @@ func die():
 
 func fullReset():
   end_win()
+  clear_grenades()
   position = startPos
   pending_restart = false
+  pending_grenade = false
   cpPos = startPos
   velocity = Vector3.ZERO
   currentUserMoveSpeed = 0
@@ -114,14 +117,11 @@ func fullReset():
 
 func _unhandled_input(event):
   if current_mode == ReplayMode.VIEWING: return
+  # inputs only raise flags; step() acts on them, so live play and resimulation do the same thing
   if event.is_action_pressed("restart"):
-    if current_mode == ReplayMode.RECORDING:
-      pending_restart = true
-    die()
+    pending_restart = true
   if event.is_action_pressed("grenade"):
-    if current_mode == ReplayMode.RECORDING:
-      pending_grenade = true
-    die()
+    pending_grenade = true
   # if event.is_action_pressed("ui_focus_next"):
   #   if current_mode == ReplayMode.NORMAL:
   #     position = Vector3.ZERO
@@ -240,6 +240,8 @@ func _physics_process(delta: float) -> void:
     $cam.rotation = data.cam_rotation
     $fake_cam.rotation = data.fake_cam_rotation
     input_dir = data.input_dir
+    pending_restart = data.restart
+    pending_grenade = data.pending_grenade
   else:
     # Process physical keyboard/mouse input states for NORMAL and RECORDING modes
     updatetrypress(has2, delta)
@@ -260,19 +262,45 @@ func _physics_process(delta: float) -> void:
     check_desync(replay_frame_index)
     replay_frame_index += 1
 
-func spawnGrenade():
-  var grenade = preload("res://scenes/grenade/main.tscn").instantiate()
-  grenade.dir = $cam.rotation
-  add_child(grenade)
+func spawnGrenade() -> void:
+  var g: Grenade = preload("res://scenes/grenade/main.tscn").instantiate()
+  get_parent().add_child(g) # not a child of the player, or it would move with it
+  g.global_position = $cam.global_position
+  g.velocity = -$cam.global_transform.basis.z * Grenade.THROW_SPEED + velocity
+  g.add_collision_exception_with(self)
+  grenades.append(g)
+
+# Every grenade advances exactly once per player step, with the same fixed delta, so grenade
+# state is a pure function of the recorded inputs. Anything a grenade does to the player
+# (blast knockback) happens here, before the player's own movement for this tick.
+func tick_grenades(delta: float, explode: bool) -> void:
+  for g in grenades.duplicate():
+    if g.tick(delta) or explode:
+      var off: Vector3 = global_position - g.global_position
+      var dist := off.length()
+      if dist < Grenade.BLAST_RADIUS:
+        velocity += off.normalized() * Grenade.BLAST_FORCE * (1.0 - dist / Grenade.BLAST_RADIUS)
+      grenades.erase(g)
+      g.queue_free()
+
+func clear_grenades() -> void:
+  for g in grenades:
+    g.queue_free()
+  grenades.clear()
 
 # One fixed physics step. Everything it depends on is either player state or an argument
 # (input_dir, trypress.jump, $fake_cam rotation), so ReplayViewer can re-run it from recorded inputs.
 func step(delta: float, input_dir: Vector2) -> void:
-  if pending_grenade:
-    spawnGrenade()
   if pending_restart:
     die()
     return
+  if pending_grenade:
+    pending_grenade = false
+    if len(grenades):
+      tick_grenades(delta, true)
+    else:
+      spawnGrenade()
+  tick_grenades(delta, false)
   if is_on_floor():
     kt = MAX_KT
     jumps = MAX_JUMPS
@@ -338,9 +366,7 @@ func record_frame(delta: float, input_dir: Vector2):
     "cam_rotation": $cam.rotation,
     "fake_cam_rotation": $fake_cam.rotation
   }
-  pending_restart = false
-  pending_grenade = false
-  replay_buffer.append(frame_data)
+  replay_buffer.append(frame_data) # flags are cleared by step() when it consumes them
 
 func stop_replay():
   current_mode = ReplayMode.NORMAL
