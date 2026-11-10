@@ -17,6 +17,7 @@ var cam_rots := PackedVector3Array() # N+1 entries
 var frame_time := 0.0 # seconds per frame
 var playhead := 0.0 # in frames, fractional
 var playing := false
+var toggleFlyEnabled := false
 
 # saved player state, restored on close
 var saved_pos: Vector3
@@ -547,11 +548,23 @@ func _input(event: InputEvent) -> void:
   if not active: return
 
   if event is InputEventMouseButton:
-    if event.button_index == MOUSE_BUTTON_RIGHT:
-      if event.pressed and not flying and not panel.get_global_rect().has_point(event.position):
+    log.pp(toggleFlyEnabled, flying)
+    if event.is_action_pressed("enable_fly_toggle"):
+      toggleFlyEnabled = !toggleFlyEnabled
+      if toggleFlyEnabled and not flying and not panel.get_global_rect().has_point(event.position):
         _start_flight()
-      elif not event.pressed and flying:
+      elif not toggleFlyEnabled and flying:
         _stop_flight()
+      get_viewport().set_input_as_handled()
+      return
+    if event.is_action_released("enable_fly"):
+      if flying and not toggleFlyEnabled:
+        _stop_flight()
+      get_viewport().set_input_as_handled()
+      return
+    if event.is_action_pressed("enable_fly"):
+      if not flying and not panel.get_global_rect().has_point(event.position):
+        _start_flight()
       get_viewport().set_input_as_handled()
       return
     if flying and event.pressed:
@@ -618,7 +631,7 @@ func _stop_flight() -> void:
 
 func _fly(delta: float) -> void:
   # catch a missed release (e.g. focus lost while RMB was held)
-  if not Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
+  if not Input.is_action_pressed("enable_fly") and not toggleFlyEnabled:
     _stop_flight()
     return
 
@@ -630,12 +643,12 @@ func _fly(delta: float) -> void:
   right = right.normalized()
 
   var dir := Vector3.ZERO
-  if Input.is_physical_key_pressed(KEY_W): dir += forward
-  if Input.is_physical_key_pressed(KEY_S): dir -= forward
-  if Input.is_physical_key_pressed(KEY_A): dir -= right
-  if Input.is_physical_key_pressed(KEY_D): dir += right
-  if Input.is_physical_key_pressed(KEY_SPACE): dir.y += 1.0
-  if Input.is_physical_key_pressed(KEY_SHIFT): dir.y -= 1.0
+  if Input.is_action_pressed("forward"): dir += forward
+  if Input.is_action_pressed("back"): dir -= forward
+  if Input.is_action_pressed("left"): dir -= right
+  if Input.is_action_pressed("right"): dir += right
+  if Input.is_action_pressed("fly_up"): dir.y += 1.0
+  if Input.is_action_pressed("fly_down"): dir.y -= 1.0
   if dir == Vector3.ZERO: return
 
   var speed := clampf(FLY_SPEED * fly_mult, 0.5, 250.0)
