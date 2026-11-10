@@ -294,7 +294,12 @@ func tick_grenades(delta: float, explode: bool) -> void:
         along = velocity.normalized().dot(dir)
       var scale: float = clamp(remap(along, -1.0, 1.0, -1, 1 * 2), -1, 1)
 
-      velocity += dir * Grenade.BLAST_FORCE
+      var boost := dir * Grenade.BLAST_FORCE
+      for axis in 3:
+        if velocity[axis] * boost[axis] < 0.0:
+          velocity[axis] = boost[axis] # opposing: cancel what you had and set it
+        else:
+          velocity[axis] += boost[axis] # same direction (or at rest): stack
       var horizontal := Vector2(dir.x, dir.z).length()
       currentUserMoveSpeed += horizontal * GRENADE_BLAST_SPEED_BOOST * scale
     active_grenade.free()

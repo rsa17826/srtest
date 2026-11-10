@@ -9,7 +9,7 @@ const GRAVITY := 25.0
 const BOUNCE := 0.5
 const FUSE_TICKS := 30
 const BLAST_RADIUS := 6.0
-const BLAST_FORCE := 25.0
+const BLAST_FORCE := 10.0
 
 var ticks := 0
 @onready var mesh: MeshInstance3D = $MeshInstance3D
@@ -25,5 +25,6 @@ func tick(delta: float):
   var col := move_and_collide(velocity * delta) # explicit motion: no engine delta involved
   if col:
     velocity = Vector3.ZERO
-  ticks += 1
+  if ticks < FUSE_TICKS:
+    ticks += 1
   mesh.set_instance_shader_parameter("fuse", clamp(float(ticks) / FUSE_TICKS, 0, 1))
