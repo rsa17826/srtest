@@ -354,7 +354,7 @@ func _simulate(buf: Array) -> void:
     player.step(f.delta, f.input_dir)
     if player.active_grenade != null:
       var g := player.active_grenade
-      grenade_frames[i] = [Vector4(g.global_position.x, g.global_position.y, g.global_position.z, float(g.ticks) / Grenade.FUSE_TICKS)]
+      grenade_frames[i] = [Vector4(g.global_position.x, g.global_position.y, g.global_position.z, float(g.ticks) / g.fuse_ticks)]
     else:
       grenade_frames[i] = []
     if first_diverge == -1 and player.global_position.distance_to(f.expected_end_position) > 0:

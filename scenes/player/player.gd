@@ -284,6 +284,7 @@ func spawnGrenade() -> void:
   g.global_position = $cam.global_position
   g.velocity = -$cam.global_transform.basis.z * Grenade.THROW_SPEED + velocity
   g.add_collision_exception_with(self)
+  g.predict_fuse_ticks(1.0 / 60.0, [get_rid()])
   active_grenade = g
 
 # Every grenade advances exactly once per player step, with the same fixed delta, so grenade
