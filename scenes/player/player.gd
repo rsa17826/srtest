@@ -13,6 +13,8 @@ const downgravity: float = 35
 const upgravity: float = 22
 var currentUserMoveSpeed: float = 0
 var currentUserJumpHeight: float = 0
+var lastGrenadeTick: float = 0
+var tickCount: int = 0
 
 var cpPos := Vector3.ZERO
 
@@ -35,7 +37,7 @@ var replay_buffer: Array = []
 var replay_frame_index: int = 0
 var pending_restart := false # restart pressed since the last recorded frame
 var pending_grenade := false # grenade pressed since the last recorded frame
-var grenades: Array[Grenade] = [] # ticked by step(), never by their own _physics_process
+var active_grenade: Grenade
 const DESYNC_THRESHOLD: float = 0.001
 # -------------------------------
 func _init() -> void:
@@ -106,6 +108,7 @@ func die():
 func fullReset():
   end_win()
   clear_grenades()
+  tickCount = 0
   position = startPos
   pending_restart = false
   pending_grenade = false
@@ -268,38 +271,42 @@ func spawnGrenade() -> void:
   g.global_position = $cam.global_position
   g.velocity = -$cam.global_transform.basis.z * Grenade.THROW_SPEED + velocity
   g.add_collision_exception_with(self)
-  grenades.append(g)
+  active_grenade = g
 
 # Every grenade advances exactly once per player step, with the same fixed delta, so grenade
 # state is a pure function of the recorded inputs. Anything a grenade does to the player
 # (blast knockback) happens here, before the player's own movement for this tick.
 func tick_grenades(delta: float, explode: bool) -> void:
-  for g in grenades.duplicate():
-    if g.tick(delta) or explode:
-      var off: Vector3 = global_position - g.global_position
-      var dist := off.length()
-      if dist < Grenade.BLAST_RADIUS:
-        velocity += off.normalized() * Grenade.BLAST_FORCE * (1.0 - dist / Grenade.BLAST_RADIUS)
-      grenades.erase(g)
-      g.queue_free()
+  if !active_grenade: return
+  active_grenade.tick(delta)
+  if explode:
+    var off: Vector3 = global_position - active_grenade.global_position
+    var dist := off.length()
+    if dist < Grenade.BLAST_RADIUS:
+      velocity += off.normalized() * Grenade.BLAST_FORCE
+      # velocity += off.normalized() * Grenade.BLAST_FORCE * (1.0 - dist / Grenade.BLAST_RADIUS)
+    active_grenade.queue_free()
 
 func clear_grenades() -> void:
-  for g in grenades:
-    g.queue_free()
-  grenades.clear()
+  if active_grenade != null:
+    active_grenade.queue_free()
+    active_grenade = null
 
 # One fixed physics step. Everything it depends on is either player state or an argument
 # (input_dir, trypress.jump, $fake_cam rotation), so ReplayViewer can re-run it from recorded inputs.
 func step(delta: float, input_dir: Vector2) -> void:
+  tickCount += 1
   if pending_restart:
     die()
     return
   if pending_grenade:
-    pending_grenade = false
-    if len(grenades):
-      tick_grenades(delta, true)
-    else:
-      spawnGrenade()
+    if tickCount - lastGrenadeTick > 30:
+      lastGrenadeTick = tickCount
+      pending_grenade = false
+      if active_grenade != null:
+        tick_grenades(delta, true)
+      else:
+        spawnGrenade()
   tick_grenades(delta, false)
   if is_on_floor():
     kt = MAX_KT

@@ -4,10 +4,10 @@ class_name Grenade
 # MeshInstance3D (sphere with grenade.gdshader) plus a CollisionShape3D.
 # It has NO _process / _physics_process: Player.step() calls tick() once per player tick.
 
-const THROW_SPEED := 14.0
+const THROW_SPEED := 25.0
 const GRAVITY := 25.0
 const BOUNCE := 0.5
-const FUSE_TICKS := 200
+const FUSE_TICKS := 30
 const BLAST_RADIUS := 6.0
 const BLAST_FORCE := 25.0
 
@@ -20,11 +20,10 @@ func _ready() -> void:
   collision_layer = 0
 
 # returns true on the tick it should explode
-func tick(delta: float) -> bool:
+func tick(delta: float):
   velocity.y -= GRAVITY * delta
   var col := move_and_collide(velocity * delta) # explicit motion: no engine delta involved
   if col:
     velocity = Vector3.ZERO
   ticks += 1
   mesh.set_instance_shader_parameter("fuse", float(ticks) / FUSE_TICKS)
-  return ticks >= FUSE_TICKS
