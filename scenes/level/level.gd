@@ -5,10 +5,19 @@ class_name Level
 func _init() -> void:
   global.level = self
 var checkpoints: Array = []
+var triggers: Array = [] # [{"area": Area3D, "on_enter": Callable}], used by ReplayViewer
+
+func add_trigger(area: Area3D, on_enter: Callable) -> void:
+  triggers.append({"area": area, "on_enter": on_enter})
+  area.body_entered.connect(on_enter)
 
 func _ready() -> void:
   for area in spawn_areas(gridmap, "goal"):
     area.body_entered.connect(func(body): if body is Player: body.win(area))
+  for area in spawn_areas(gridmap, "spiky ball"):
+    add_trigger(area, func(body): if body is Player: body.onTick.append(body.die))
+  for area in spawn_areas(gridmap, "speed zone"):
+    add_trigger(area, func(body): if body is Player: body.onTick.append(func(): if body.currentUserMoveSpeed < 20: body.currentUserMoveSpeed=20))
 
   var cp_areas := spawn_areas(gridmap, "cp")
   var cp_panes := replace_with_nodes(gridmap, "cp")

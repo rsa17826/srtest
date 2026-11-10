@@ -33,6 +33,14 @@ var cp_first: Array[int] = [] # first frame each checkpoint is touched, -1 = nev
 var cp_state: Array[bool] = [] # currently shown as collected?
 var cp_tweens := {}
 
+# gameplay triggers (level.triggers = [{"area": Area3D, "on_enter": Callable}, ...]). Player collision is
+# off while viewing, so the resimulation fires their on_enter itself, like body_entered would.
+var triggers: Array = []
+# Area3D events reach the game this many ticks after the player entered the area (measured against
+# real recordings: with 0 the resimulation died one frame before the live run did). If the replay
+# still diverges exactly at a trigger event, try 2.
+const TRIGGER_DELAY_TICKS := 1
+
 # grenades, as seen by the resimulation: per frame, an Array of Vector4(x, y, z, fuse 0..1)
 const GRENADE_SCENE := preload("res://scenes/grenade/main.tscn")
 var grenade_frames: Array = []
@@ -155,6 +163,7 @@ func open() -> void:
     "cp_pos": player.cpPos,
   }
 
+  triggers = global.level.triggers
   cps = global.level.checkpoints
   saved_cp.clear()
   cp_state.clear()
@@ -309,8 +318,17 @@ func _simulate(buf: Array) -> void:
   player.jumps = first.jumps
   player.kt = first.kt
 
+  var trigger_query := PhysicsShapeQueryParameters3D.new()
+  trigger_query.shape = player.get_node("CollisionShape3D").shape
+  trigger_query.collide_with_areas = true
+  trigger_query.collide_with_bodies = false
+  trigger_query.collision_mask = 0xFFFFFFFF
+  var inside := _overlapping_triggers(trigger_query, player.global_position) # no events for what we start inside of
+  var pending_events: Array = [] # per tick: triggers entered on that tick, waiting out the delay
+
   first_diverge = -1
   player.clear_grenades()
+  player.onTick.clear()
   grenade_frames.clear()
   grenade_frames.resize(n)
   var lastf = null
@@ -327,6 +345,7 @@ func _simulate(buf: Array) -> void:
       grenade_frames[i] = []
       continue
     player.cpPos = f.cp_pos # checkpoints are not re-derived; respawns use the recorded one
+    player.run_on_tick() # effects queued by triggers on an earlier tick, exactly where the live game runs them
     player.pending_restart = f.restart
     player.pending_grenade = f.pending_grenade
     positions[i] = player.global_position
@@ -343,9 +362,38 @@ func _simulate(buf: Array) -> void:
       log.pp(lastf, f)
       first_diverge = i
     lastf = f
+
+    # Area3D events happen after the physics step, so they land between this tick and the next
+    # (after the divergence check, which compares against the end of the step itself)
+    var now := _overlapping_triggers(trigger_query, player.global_position)
+    var entered: Array = []
+    for area in now:
+      if not inside.has(area):
+        entered.append(now[area])
+    inside = now
+    pending_events.append(entered)
+    if pending_events.size() > TRIGGER_DELAY_TICKS:
+      for t in pending_events.pop_front():
+        t.on_enter.call(player)
   positions[n] = buf[n - 1].expected_end_position if buf[n - 1].winning else player.global_position
   cam_rots[n] = buf[n - 1].cam_rotation
   player.clear_grenades() # the resimulation's grenades were only needed for their effect on the player
+  player.onTick.clear()
+
+# ---------------------------------------------------------------- triggers
+
+# {area: trigger} for every trigger area the player's shape overlaps at `pos` and that is set to detect the player
+func _overlapping_triggers(query: PhysicsShapeQueryParameters3D, pos: Vector3) -> Dictionary:
+  var shape_node: CollisionShape3D = player.get_node("CollisionShape3D")
+  query.transform = Transform3D(Basis.IDENTITY, pos) * shape_node.transform
+  var hit_areas := {}
+  for hit in player.get_world_3d().direct_space_state.intersect_shape(query, 64):
+    hit_areas[hit.collider] = true
+  var out := {}
+  for t in triggers:
+    if hit_areas.has(t.area) and (t.area.collision_mask & saved_layer) != 0:
+      out[t.area] = t
+  return out
 
 # ---------------------------------------------------------------- grenades
 # Frame i's snapshot is the state at the END of frame i, i.e. what the player sees at playhead i + 1.

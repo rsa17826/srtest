@@ -43,6 +43,9 @@ const DESYNC_THRESHOLD: float = 0.001
 # -------------------------------
 func _init() -> void:
   global.player = self
+
+var onTick: Array[Callable] = []
+
 @onready var grid: GridMap = global.level.gridmap
 func getTileId(name):
   var id := grid.mesh_library.find_item_by_name(name)
@@ -208,6 +211,7 @@ func _physics_process(delta: float) -> void:
   delta = 1 / 60.0
   var input_dir := Vector2.ZERO
   if current_mode == ReplayMode.VIEWING: return # first line, before `if winning:`
+  run_on_tick()
   if winning:
     winTimer += delta
     win_fade = global.rerange(winTimer, 0, 1, 0, 8)
@@ -267,6 +271,12 @@ func _physics_process(delta: float) -> void:
   elif current_mode == ReplayMode.REPLAYING:
     check_desync(replay_frame_index)
     replay_frame_index += 1
+
+# Effects queued by area triggers (die, speed zone, ...). Runs at the very start of a tick, before the
+# frame is recorded; ReplayViewer calls it at the same point of every simulated tick.
+func run_on_tick() -> void:
+  while len(onTick):
+    onTick.pop_front().call()
 
 func spawnGrenade() -> void:
   var g: Grenade = preload("res://scenes/grenade/main.tscn").instantiate()
