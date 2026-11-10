@@ -37,8 +37,9 @@ var current_mode = ReplayMode.NORMAL
 var replay_buffer: Array = []
 var replay_frame_index: int = 0
 var pending_restart := false # restart pressed since the last recorded frame
-var pending_grenade_spawn := false # grenade pressed since the last recorded frame
-var pending_grenade_explode := false # grenade pressed since the last recorded frame
+var pending_grenade_spawn := false
+var pending_grenade_explode := false
+var canUseGrenade := false
 var active_grenade: Grenade
 const DESYNC_THRESHOLD: float = 0.001
 # -------------------------------
@@ -108,6 +109,8 @@ func die():
   end_win()
   pending_restart = false
   position = cpPos
+  currentUserMoveSpeed = 0
+  currentUserJumpHeight = 0
   velocity = Vector3.ZERO
 
 func fullReset():
@@ -337,7 +340,8 @@ func step(delta: float, input_dir: Vector2) -> void:
     die()
     return
   if pending_grenade_spawn:
-    if tickCount - lastGrenadeTick > 30:
+    if tickCount - lastGrenadeTick > 30 and canUseGrenade:
+      canUseGrenade = false
       lastGrenadeTick = tickCount
       pending_grenade_spawn = false
       if active_grenade != null:
@@ -393,6 +397,8 @@ func step(delta: float, input_dir: Vector2) -> void:
 
   if is_on_wall():
     currentUserMoveSpeed = USER_MOVE_SPEED
+  if is_on_floor():
+    canUseGrenade = true
 
 func record_frame(delta: float, input_dir: Vector2):
   var frame_data = {
