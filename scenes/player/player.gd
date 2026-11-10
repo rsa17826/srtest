@@ -88,7 +88,7 @@ func press(key):
 func _input(event):
   if current_mode == ReplayMode.REPLAYING or current_mode == ReplayMode.VIEWING: return
 
-  if event is InputEventMouseButton:
+  if event is InputEventMouseButton and global.canCaptureMouse:
     Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
   if event is InputEventMouseMotion:
     $cam.rotation.y += -event.relative.x * MOUSE_SENSITIVITY

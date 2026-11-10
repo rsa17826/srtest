@@ -604,3 +604,4 @@ func localReady(): pass
 func localProcess(delta: float): pass
 var level: Level
 var player: Player
+var canCaptureMouse := true

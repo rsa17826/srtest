@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://5fqryky1k7o6"]
 
 [ext_resource type="Script" uid="uid://c8080it0cdjjp" path="res://level_select.gd" id="1_h7cpk"]
+[ext_resource type="PackedScene" uid="uid://cfutstwuqdraw" path="res://scenes/keybinds/controls.tscn" id="2_g371p"]
 
 [node name="Control" type="Control" unique_id=210842070]
 layout_mode = 3
@@ -10,3 +11,5 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_h7cpk")
+
+[node name="Controls" parent="." unique_id=693935935 instance=ExtResource("2_g371p")]

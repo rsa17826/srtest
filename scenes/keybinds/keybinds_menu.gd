@@ -12,16 +12,20 @@ const CARD_WIDTH := 190
 ## explicit categories, an action that isn't listed here ends up in "Other"
 const CATEGORIES: Array[Dictionary] = [
   {"name": "Movement", "actions": [
-    &"jump", &"forward", &"left", &"right", &"restart", &"full_restart",
-    &"back",
+    &"jump", &"forward", &"left", &"right", &"back",
+  ]},
+  {"name": "Player Actions", "actions": [
+    &"grenade", &"restart", &"full_restart",
+  ]},
+  {"name": "Replay Viewer", "actions": [
+    &"replay_playpause", &"replay_next_frame", &"replay_prev_frame", &"replay_first_frame", &"replay_last_frame", &"replay_prev_second", &"replay_next_second",
+    &"enable_fly", &"enable_fly_toggle", &"fly_up", &"fly_down",
+    &"forward", &"left", &"right", &"back",
   ]},
 ]
 
 ## icons for actions that aren't blocks, action name -> image path. add more here.
 const ACTION_ICONS: Dictionary = {
-  &"focus_on_player": "res://scenes/player/images/anim/idle/1.png",
-  &"toggle_noclip": "res://scenes/player/images/anim/idle/1.png",
-  &"activate_temporary_checkpoint": "res://scenes/player/images/anim/idle/1.png",
   &"move_player_to_mouse": "res://scenes/player/images/anim/idle/1.png",
 }
 
@@ -53,8 +57,7 @@ var _captureSlot := 0
 func _ready() -> void:
   theme = SystemUI.theme() # before _buildUi, _panelStyle reads the panel style from it
   _buildUi()
-  if visible:
-    _onVisibilityChanged()
+  _onVisibilityChanged()
 
 func _buildUi() -> void:
   mouse_filter = Control.MOUSE_FILTER_STOP
@@ -212,12 +215,15 @@ func close() -> void:
   visible = false
 
 func _onVisibilityChanged() -> void:
+  global.canCaptureMouse = !visible
   if not visible:
     _hidePrompt()
     return
   _buildCategories()
   _refreshCategoryList()
   _refreshContent()
+  if visible:
+    Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 func _process(_delta: float) -> void:
   # a Control directly under a CanvasLayer doesn't get a size from its anchors
@@ -235,8 +241,6 @@ func _input(event: InputEvent) -> void:
 # ---------------- categories ----------------
 
 func _actionName(action: StringName) -> String:
-  if action.begins_with(CREATE_NEW_PREFIX):
-    return action.trim_prefix(CREATE_NEW_PREFIX)
   return String(action).capitalize()
 
 func _buildCategories() -> void:
@@ -260,26 +264,6 @@ func _buildCategories() -> void:
   if others:
     _categoryActions[OTHER_CATEGORY] = others
     _categoryOrder.append(OTHER_CATEGORY)
-  # one category per group of the editor bar file
-  var barData: Dictionary = sds.loadDataFromFile(global.path.abs("res://editorBar.sds"), {})
-  for groupName: String in barData:
-    if groupName == "remove": continue
-    var groupActions: Array = []
-    for entry in barData[groupName]:
-      var blockName: String = entry.name if entry is Dictionary else entry
-      var action := StringName(CREATE_NEW_PREFIX + blockName.replace("/", "_"))
-      if action not in all and blockName in global.oldNameMap:
-        action = StringName(CREATE_NEW_PREFIX + String(global.oldNameMap[blockName]).replace("/", "_"))
-      if action not in all or action in groupActions: continue
-      groupActions.append(action)
-      if action not in _actionBlock:
-        _actionBlock[action] = entry
-    if groupActions:
-      _categoryActions[groupName] = groupActions
-      _categoryOrder.append(groupName)
-      _barGroups.append(groupName)
-  if _selectedCategory not in _categoryOrder:
-    _selectedCategory = _categoryOrder[0]
 
 func _refreshCategoryList() -> void:
   for child in _categoryList.get_children():
