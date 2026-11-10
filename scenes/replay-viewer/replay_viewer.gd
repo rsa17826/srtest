@@ -317,8 +317,7 @@ func _simulate(buf: Array) -> void:
       positions[i] = f.start_position
       continue
     player.cpPos = f.cp_pos # checkpoints are not re-derived; respawns use the recorded one
-    if f.restart:
-      player.die()
+    player.pending_restart = f.restart
     positions[i] = player.global_position
     player.trypress.jump = f.trypress_jump
     player.step(f.delta, f.input_dir)

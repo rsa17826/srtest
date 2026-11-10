@@ -34,6 +34,7 @@ var current_mode = ReplayMode.NORMAL
 var replay_buffer: Array = []
 var replay_frame_index: int = 0
 var pending_restart := false # restart pressed since the last recorded frame
+var pending_grenade := false # restart pressed since the last recorded frame
 const DESYNC_THRESHOLD: float = 0.001
 # -------------------------------
 func _init() -> void:
@@ -97,12 +98,14 @@ func _input(event):
 
 func die():
   end_win()
+  pending_restart = false
   position = cpPos
   velocity = Vector3.ZERO
 
 func fullReset():
   end_win()
   position = startPos
+  pending_restart = false
   cpPos = startPos
   velocity = Vector3.ZERO
   currentUserMoveSpeed = 0
@@ -114,6 +117,10 @@ func _unhandled_input(event):
   if event.is_action_pressed("restart"):
     if current_mode == ReplayMode.RECORDING:
       pending_restart = true
+    die()
+  if event.is_action_pressed("grenade"):
+    if current_mode == ReplayMode.RECORDING:
+      pending_grenade = true
     die()
   # if event.is_action_pressed("ui_focus_next"):
   #   if current_mode == ReplayMode.NORMAL:
@@ -253,9 +260,19 @@ func _physics_process(delta: float) -> void:
     check_desync(replay_frame_index)
     replay_frame_index += 1
 
+func spawnGrenade():
+  var grenade = preload("res://scenes/grenade/main.tscn").instantiate()
+  grenade.dir = $cam.rotation
+  add_child(grenade)
+
 # One fixed physics step. Everything it depends on is either player state or an argument
 # (input_dir, trypress.jump, $fake_cam rotation), so ReplayViewer can re-run it from recorded inputs.
 func step(delta: float, input_dir: Vector2) -> void:
+  if pending_grenade:
+    spawnGrenade()
+  if pending_restart:
+    die()
+    return
   if is_on_floor():
     kt = MAX_KT
     jumps = MAX_JUMPS
@@ -308,6 +325,7 @@ func record_frame(delta: float, input_dir: Vector2):
     "expected_end_position": Vector3.ZERO,
     "input_dir": input_dir,
     "restart": pending_restart,
+    "pending_grenade": pending_grenade,
     "winning": winning, # win animation frames are scripted, not simulated
     "cp_pos": cpPos, # respawn point at the start of this frame (die() uses it)
     "delta": delta,
@@ -321,6 +339,7 @@ func record_frame(delta: float, input_dir: Vector2):
     "fake_cam_rotation": $fake_cam.rotation
   }
   pending_restart = false
+  pending_grenade = false
   replay_buffer.append(frame_data)
 
 func stop_replay():
