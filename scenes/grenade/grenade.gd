@@ -5,10 +5,10 @@ class_name Grenade
 # It has NO _process / _physics_process: Player.step() calls tick() once per player tick.
 
 const THROW_SPEED := 14.0
-const GRAVITY := 20.0
+const GRAVITY := 25.0
 const BOUNCE := 0.5
-const FUSE_TICKS := 90 # 1.5 s at 60 ticks/s
-const BLAST_RADIUS := 12.0
+const FUSE_TICKS := 200
+const BLAST_RADIUS := 6.0
 const BLAST_FORCE := 25.0
 
 var ticks := 0
@@ -24,7 +24,7 @@ func tick(delta: float) -> bool:
   velocity.y -= GRAVITY * delta
   var col := move_and_collide(velocity * delta) # explicit motion: no engine delta involved
   if col:
-    velocity = velocity.bounce(col.get_normal()) * BOUNCE
+    velocity = Vector3.ZERO
   ticks += 1
   mesh.set_instance_shader_parameter("fuse", float(ticks) / FUSE_TICKS)
   return ticks >= FUSE_TICKS
