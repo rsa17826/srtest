@@ -517,6 +517,8 @@ static func coloritem(item: Variant, tab: int = -2, isarrafterdict: bool = false
     getcolor("end") + coloritem(item.x) + getcolor("darkgreen") \
     +", " \
     + getcolor("end") + coloritem(item.y) + getcolor("darkgreen") \
+    +", " \
+    + getcolor("end") + coloritem(item.z) + getcolor("darkgreen") \
     +")" + getcolor("end")
   if item is bool:
     return getcolor("blue") + str(item) + getcolor("end")

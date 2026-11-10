@@ -139,7 +139,7 @@ func _unhandled_input(event):
 
 func dojump():
   velocity.y = currentUserJumpHeight
-  currentUserMoveSpeed += JUMP_SPEED_BOOST
+  # currentUserMoveSpeed += JUMP_SPEED_BOOST
   unpress("jump")
   jumps -= 1
 
@@ -285,7 +285,11 @@ func tick_grenades(delta: float, explode: bool) -> void:
     var off: Vector3 = global_position - active_grenade.global_position
     var dist := off.length()
     if dist < Grenade.BLAST_RADIUS:
-      velocity += off.normalized() * Grenade.BLAST_FORCE
+      var boost = off.normalized() * Grenade.BLAST_FORCE
+      velocity += boost
+      var nb = boost.normalized()
+      log.pp(nb, abs(nb.x) + abs(nb.z))
+      currentUserMoveSpeed += abs(nb.x) + abs(nb.z)
     active_grenade.free()
     active_grenade = null
 

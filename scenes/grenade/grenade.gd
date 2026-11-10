@@ -26,4 +26,4 @@ func tick(delta: float):
   if col:
     velocity = Vector3.ZERO
   ticks += 1
-  mesh.set_instance_shader_parameter("fuse", float(ticks) / FUSE_TICKS)
+  mesh.set_instance_shader_parameter("fuse", clamp(float(ticks) / FUSE_TICKS, 0, 1))
