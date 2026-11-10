@@ -348,7 +348,8 @@ func _simulate(buf: Array) -> void:
     player.cpPos = f.cp_pos # checkpoints are not re-derived; respawns use the recorded one
     player.run_on_tick() # effects queued by triggers on an earlier tick, exactly where the live game runs them
     player.pending_restart = f.restart
-    player.pending_grenade = f.pending_grenade
+    player.pending_grenade_spawn = f.pending_grenade_spawn
+    player.pending_grenade_explode = f.pending_grenade_explode
     positions[i] = player.global_position
     player.trypress.jump = f.trypress_jump
     player.step(f.delta, f.input_dir)

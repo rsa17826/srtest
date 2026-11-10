@@ -37,7 +37,8 @@ var current_mode = ReplayMode.NORMAL
 var replay_buffer: Array = []
 var replay_frame_index: int = 0
 var pending_restart := false # restart pressed since the last recorded frame
-var pending_grenade := false # grenade pressed since the last recorded frame
+var pending_grenade_spawn := false # grenade pressed since the last recorded frame
+var pending_grenade_explode := false # grenade pressed since the last recorded frame
 var active_grenade: Grenade
 const DESYNC_THRESHOLD: float = 0.001
 # -------------------------------
@@ -115,7 +116,8 @@ func fullReset():
   tickCount = 0
   position = startPos
   pending_restart = false
-  pending_grenade = false
+  pending_grenade_spawn = false
+  pending_grenade_explode = false
   cpPos = startPos
   velocity = Vector3.ZERO
   currentUserMoveSpeed = 0
@@ -127,10 +129,14 @@ func _unhandled_input(event):
   # inputs only raise flags; step() acts on them, so live play and resimulation do the same thing
   if event.is_action_pressed("restart"):
     pending_restart = true
-  if event.is_action_pressed("grenade"):
-    pending_grenade = true
-  elif event.is_action_released("grenade"):
-    pending_grenade = false
+  if event.is_action_pressed("spawn_grenade"):
+    pending_grenade_spawn = true
+  elif event.is_action_released("spawn_grenade"):
+    pending_grenade_spawn = false
+  if event.is_action_pressed("explode_grenade"):
+    pending_grenade_explode = true
+  elif event.is_action_released("explode_grenade"):
+    pending_grenade_explode = false
   # if event.is_action_pressed("ui_focus_next"):
   #   if current_mode == ReplayMode.NORMAL:
   #     position = Vector3.ZERO
@@ -251,7 +257,8 @@ func _physics_process(delta: float) -> void:
     $fake_cam.rotation = data.fake_cam_rotation
     input_dir = data.input_dir
     pending_restart = data.restart
-    pending_grenade = data.pending_grenade
+    pending_grenade_spawn = data.pending_grenade_spawn
+    pending_grenade_explode = data.pending_grenade_explode
   else:
     # Process physical keyboard/mouse input states for NORMAL and RECORDING modes
     updatetrypress(has2, delta)
@@ -286,6 +293,7 @@ func spawnGrenade() -> void:
   g.add_collision_exception_with(self)
   g.predict_fuse_ticks(1.0 / 60.0, [get_rid()])
   active_grenade = g
+  g.tick(1 / 60.0)
 
 # Every grenade advances exactly once per player step, with the same fixed delta, so grenade
 # state is a pure function of the recorded inputs. Anything a grenade does to the player
@@ -328,14 +336,17 @@ func step(delta: float, input_dir: Vector2) -> void:
   if pending_restart:
     die()
     return
-  if pending_grenade:
+  if pending_grenade_spawn:
     if tickCount - lastGrenadeTick > 30:
       lastGrenadeTick = tickCount
-      pending_grenade = false
+      pending_grenade_spawn = false
       if active_grenade != null:
-        tick_grenades(delta, true)
-      else:
-        spawnGrenade()
+        clear_grenades()
+      spawnGrenade()
+  if pending_grenade_explode:
+    pending_grenade_explode = false
+    if active_grenade != null:
+      tick_grenades(delta, true)
   tick_grenades(delta, false)
   if is_on_floor():
     kt = MAX_KT
@@ -389,7 +400,8 @@ func record_frame(delta: float, input_dir: Vector2):
     "expected_end_position": Vector3.ZERO,
     "input_dir": input_dir,
     "restart": pending_restart,
-    "pending_grenade": pending_grenade,
+    "pending_grenade_spawn": pending_grenade_spawn,
+    "pending_grenade_explode": pending_grenade_explode,
     "winning": winning, # win animation frames are scripted, not simulated
     "cp_pos": cpPos, # respawn point at the start of this frame (die() uses it)
     "delta": delta,

@@ -13,6 +13,7 @@ const BLAST_FORCE := 10.0
 
 var ticks := 0
 var fuse_ticks := 1 # set by predict_fuse_ticks() at spawn: ticks until the first surface is hit
+var stopTicking = false
 @onready var mesh: MeshInstance3D = $MeshInstance3D
 
 func _ready() -> void:
@@ -44,10 +45,12 @@ func fuse() -> float:
   return clampf(float(ticks) / fuse_ticks, 0.0, 1.0)
 
 func tick(delta: float):
+  if ticks < fuse_ticks:
+    ticks += 1
+  mesh.set_instance_shader_parameter("fuse", fuse())
+  if stopTicking: return
   velocity.y -= GRAVITY * delta
   var col := move_and_collide(velocity * delta) # explicit motion: no engine delta involved
   if col:
     velocity = Vector3.ZERO
-  if ticks < fuse_ticks:
-    ticks += 1
-  mesh.set_instance_shader_parameter("fuse", fuse())
+    stopTicking = true
