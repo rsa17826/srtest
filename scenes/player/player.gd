@@ -125,6 +125,8 @@ func _unhandled_input(event):
     pending_restart = true
   if event.is_action_pressed("grenade"):
     pending_grenade = true
+  elif event.is_action_released("grenade"):
+    pending_grenade = false
   # if event.is_action_pressed("ui_focus_next"):
   #   if current_mode == ReplayMode.NORMAL:
   #     position = Vector3.ZERO
@@ -277,19 +279,19 @@ func spawnGrenade() -> void:
 # state is a pure function of the recorded inputs. Anything a grenade does to the player
 # (blast knockback) happens here, before the player's own movement for this tick.
 func tick_grenades(delta: float, explode: bool) -> void:
-  if !active_grenade: return
+  if active_grenade == null: return
   active_grenade.tick(delta)
   if explode:
     var off: Vector3 = global_position - active_grenade.global_position
     var dist := off.length()
     if dist < Grenade.BLAST_RADIUS:
       velocity += off.normalized() * Grenade.BLAST_FORCE
-      # velocity += off.normalized() * Grenade.BLAST_FORCE * (1.0 - dist / Grenade.BLAST_RADIUS)
-    active_grenade.queue_free()
+    active_grenade.free()
+    active_grenade = null
 
 func clear_grenades() -> void:
   if active_grenade != null:
-    active_grenade.queue_free()
+    active_grenade.free()
     active_grenade = null
 
 # One fixed physics step. Everything it depends on is either player state or an argument
@@ -369,6 +371,8 @@ func record_frame(delta: float, input_dir: Vector2):
     "currentUserJumpHeight": currentUserJumpHeight,
     "jumps": jumps,
     "kt": kt,
+    "tick_count": tickCount,
+    "last_grenade_tick": lastGrenadeTick,
     "trypress_jump": trypress.jump,
     "cam_rotation": $cam.rotation,
     "fake_cam_rotation": $fake_cam.rotation

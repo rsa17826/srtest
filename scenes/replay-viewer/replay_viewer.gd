@@ -332,10 +332,11 @@ func _simulate(buf: Array) -> void:
     positions[i] = player.global_position
     player.trypress.jump = f.trypress_jump
     player.step(f.delta, f.input_dir)
-    var snap: Array = []
-    if player.active_grenade:
-      snap.append(Vector4(player.active_grenade.global_position.x, player.active_grenade.global_position.y, player.active_grenade.global_position.z, float(player.active_grenade.ticks) / Grenade.FUSE_TICKS))
-    grenade_frames[i] = snap
+    if player.active_grenade != null:
+      var g := player.active_grenade
+      grenade_frames[i] = [Vector4(g.global_position.x, g.global_position.y, g.global_position.z, float(g.ticks) / Grenade.FUSE_TICKS)]
+    else:
+      grenade_frames[i] = []
     if first_diverge == -1 and player.global_position.distance_to(f.expected_end_position) > 0:
       log.pp(player.global_position.distance_to(f.expected_end_position), i)
       log.pp("on_floor:", player.is_on_floor(), "slide collisions:", player.get_slide_collision_count())
