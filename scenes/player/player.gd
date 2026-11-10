@@ -2,6 +2,7 @@ extends CharacterBody3D
 class_name Player
 
 const USER_MOVE_SPEED = 5.5
+const GRENADE_BLAST_SPEED_BOOST = 4
 const JUMP_SPEED_BOOST = 1.5
 const JUMP_VEL = 10.4
 var MAX_JUMPS = 1
@@ -285,11 +286,17 @@ func tick_grenades(delta: float, explode: bool) -> void:
     var off: Vector3 = global_position - active_grenade.global_position
     var dist := off.length()
     if dist < Grenade.BLAST_RADIUS:
-      var boost = off.normalized() * Grenade.BLAST_FORCE
-      velocity += boost
-      var nb = boost.normalized()
-      log.pp(nb, abs(nb.x) + abs(nb.z))
-      currentUserMoveSpeed += abs(nb.x) + abs(nb.z)
+      var dir := off.normalized()
+
+      # -1 = running into the blast, 0 = sideways or standing still, +1 = running away from it
+      var along := 0.0
+      if velocity.length() > 0.1:
+        along = velocity.normalized().dot(dir)
+      var scale: float = clamp(remap(along, -1.0, 1.0, -1, 1 * 2), -1, 1)
+
+      velocity += dir * Grenade.BLAST_FORCE
+      var horizontal := Vector2(dir.x, dir.z).length()
+      currentUserMoveSpeed += horizontal * GRENADE_BLAST_SPEED_BOOST * scale
     active_grenade.free()
     active_grenade = null
 
