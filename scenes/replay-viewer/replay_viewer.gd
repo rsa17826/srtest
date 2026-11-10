@@ -582,23 +582,33 @@ func _input(event: InputEvent) -> void:
     return
 
   # keyboard shortcuts while not flying
-  if not flying and compiled and event is InputEventKey and event.pressed:
-    if event.is_action_pressed("replay_playpause"):
+  if compiled and event is InputEventKey and event.pressed:
+    if _replay_pressed(event, "replay_playpause"):
       _toggle_play()
       get_viewport().set_input_as_handled()
-    elif event.is_action_pressed("replay_prev_frame"):
-      _step(-1)
-      get_viewport().set_input_as_handled()
-    elif event.is_action_pressed("replay_next_frame"):
-      _step(1)
-      get_viewport().set_input_as_handled()
-    elif event.is_action_pressed("replay_prev_second"):
+    elif _replay_pressed(event, "replay_prev_second"):
       _step(-60)
       get_viewport().set_input_as_handled()
-    elif event.is_action_pressed("replay_next_second"):
+    elif _replay_pressed(event, "replay_next_second"):
       _step(60)
       get_viewport().set_input_as_handled()
+    elif _replay_pressed(event, "replay_prev_frame"):
+      _step(-1)
+      get_viewport().set_input_as_handled()
+    elif _replay_pressed(event, "replay_next_frame"):
+      _step(1)
+      get_viewport().set_input_as_handled()
 
+
+const FLY_ACTIONS: Array[StringName] = [&"forward", &"back", &"left", &"right", &"fly_up", &"fly_down"]
+
+# like event.is_action_pressed(action), minus any key that the fly controls also use (only while flying)
+func _replay_pressed(event: InputEvent, action: StringName) -> bool:
+  if not event.is_action_pressed(action): return false
+  if flying:
+    for fly_action in FLY_ACTIONS:
+      if event.is_action(fly_action, true): return false
+  return true
 # ---------------------------------------------------------------- free camera
 
 func _start_flight() -> void:
