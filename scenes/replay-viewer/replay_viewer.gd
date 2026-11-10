@@ -571,14 +571,20 @@ func _input(event: InputEvent) -> void:
 
   # keyboard shortcuts while not flying
   if not flying and compiled and event is InputEventKey and event.pressed:
-    if event.keycode == KEY_SPACE and not event.echo:
+    if event.is_action_pressed("replay_playpause"):
       _toggle_play()
       get_viewport().set_input_as_handled()
-    elif event.keycode == KEY_LEFT:
+    elif event.is_action_pressed("replay_prev_frame"):
       _step(-1)
       get_viewport().set_input_as_handled()
-    elif event.keycode == KEY_RIGHT:
+    elif event.is_action_pressed("replay_next_frame"):
       _step(1)
+      get_viewport().set_input_as_handled()
+    elif event.is_action_pressed("replay_prev_second"):
+      _step(-60)
+      get_viewport().set_input_as_handled()
+    elif event.is_action_pressed("replay_next_second"):
+      _step(60)
       get_viewport().set_input_as_handled()
 
 # ---------------------------------------------------------------- free camera

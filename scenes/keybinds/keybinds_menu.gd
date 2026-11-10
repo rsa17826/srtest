@@ -51,6 +51,7 @@ var _captureAction: StringName
 var _captureSlot := 0
 
 func _ready() -> void:
+  theme = SystemUI.theme() # before _buildUi, _panelStyle reads the panel style from it
   _buildUi()
   if visible:
     _onVisibilityChanged()
@@ -59,16 +60,19 @@ func _buildUi() -> void:
   mouse_filter = Control.MOUSE_FILTER_STOP
   set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
   var dim := ColorRect.new()
-  dim.color = Color(
-    "#ff00f200"
-  )
+  dim.color = Color(0.0, 0.02, 0.05, 0.6)
   dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
   dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
   add_child(dim)
   var panel := PanelContainer.new()
   panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, 16)
-  panel.add_theme_stylebox_override("panel", _panelStyle(8))
+  var mainStyle := _panelStyle(8) as StyleBoxFlat
+  panel.add_theme_stylebox_override("panel", mainStyle)
   add_child(panel)
+  SystemUI.add_brackets(panel)
+  var glow := create_tween().set_loops() # slow breathing glow on the border, like the other windows
+  glow.tween_property(mainStyle, "shadow_size", 22, 1.4).set_trans(Tween.TRANS_SINE)
+  glow.tween_property(mainStyle, "shadow_size", 12, 1.4).set_trans(Tween.TRANS_SINE)
   var root := VBoxContainer.new()
   root.add_theme_constant_override("separation", 6)
   panel.add_child(root)
@@ -77,8 +81,11 @@ func _buildUi() -> void:
   header.add_theme_constant_override("separation", 6)
   root.add_child(header)
   var title := Label.new()
-  title.text = "Keybinds"
+  title.text = "[ KEYBINDS ]"
   title.add_theme_font_size_override("font_size", 22)
+  title.add_theme_color_override("font_color", SystemUI.CYAN)
+  title.add_theme_color_override("font_shadow_color", Color(SystemUI.CYAN, 0.7))
+  title.add_theme_constant_override("shadow_outline_size", 10)
   header.add_child(title)
   _search = LineEdit.new()
   _search.placeholder_text = "Search actions or keys..."
@@ -101,8 +108,7 @@ func _buildUi() -> void:
   root.add_child(body)
   var sidebar := PanelContainer.new()
   sidebar.custom_minimum_size = Vector2(190, 0)
-  sidebar.add_theme_stylebox_override("panel", _panelStyle(4))
-  sidebar.self_modulate = Color(1.2, 1.2, 1.2)
+  sidebar.add_theme_stylebox_override("panel", _cardStyle(4))
   body.add_child(sidebar)
   var sidebarScroll := ScrollContainer.new()
   sidebarScroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -121,7 +127,7 @@ func _buildUi() -> void:
 
   var hint := Label.new()
   hint.text = "Click a key to change it, + to add another, x or right click to remove one."
-  hint.modulate = Color(1, 1, 1, 0.6)
+  hint.add_theme_color_override("font_color", SystemUI.DIM)
   root.add_child(hint)
 
   _buildPrompt()
@@ -133,11 +139,18 @@ func _panelStyle(margin: int) -> StyleBox:
   style.set_content_margin_all(margin)
   return style
 
+## flat, glow-free box for the many small panels (sidebar, cards), the big window keeps the glowing one
+func _cardStyle(margin: int) -> StyleBox:
+  var style := StyleBoxFlat.new()
+  style.bg_color = Color(SystemUI.CYAN, 0.05)
+  style.border_color = Color(SystemUI.CYAN, 0.35)
+  style.set_border_width_all(1)
+  style.set_content_margin_all(margin)
+  return style
+
 func _buildPrompt() -> void:
   _promptDim = ColorRect.new()
-  _promptDim.color = Color(
-    "#ff00f200"
-  )
+  _promptDim.color = Color(0.0, 0.02, 0.05, 0.7)
   _promptDim.mouse_filter = Control.MOUSE_FILTER_STOP
   _promptDim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
   _promptDim.visible = false
@@ -149,6 +162,7 @@ func _buildPrompt() -> void:
   _promptPanel.custom_minimum_size = Vector2(420, 0)
   _promptPanel.add_theme_stylebox_override("panel", _panelStyle(10))
   center.add_child(_promptPanel)
+  SystemUI.add_brackets(_promptPanel)
   var box := VBoxContainer.new()
   box.add_theme_constant_override("separation", 6)
   _promptPanel.add_child(box)
@@ -159,6 +173,7 @@ func _buildPrompt() -> void:
   box.add_child(_promptTitle)
   _promptKey = Label.new()
   _promptKey.add_theme_font_size_override("font_size", 28)
+  _promptKey.add_theme_color_override("font_color", SystemUI.CYAN)
   _promptKey.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
   box.add_child(_promptKey)
   _promptBody = Label.new()
@@ -275,7 +290,7 @@ func _refreshCategoryList() -> void:
       addedGroupsHeader = true
       var groupsHeader := Label.new()
       groupsHeader.text = "Editor bar rows"
-      groupsHeader.modulate = Color(1, 1, 1, 0.6)
+      groupsHeader.add_theme_color_override("font_color", SystemUI.DIM)
       _categoryList.add_child(groupsHeader)
     var button := Button.new()
     button.text = "%s  (%d)" % [categoryName, len(_categoryActions[categoryName])]
@@ -311,8 +326,9 @@ func _refreshContent() -> void:
       actions = actions.filter(func(action: StringName) -> bool: return _matchesSearch(action, categoryName, query))
     if not actions: continue
     var header := Label.new()
-    header.text = categoryName
+    header.text = "[ %s ]" % categoryName.to_upper()
     header.add_theme_font_size_override("font_size", 18)
+    header.add_theme_color_override("font_color", SystemUI.CYAN)
     _content.add_child(header)
     var flow := HFlowContainer.new()
     flow.add_theme_constant_override("h_separation", 4)
@@ -324,8 +340,7 @@ func _refreshContent() -> void:
 func _makeCard(action: StringName) -> Control:
   var card := PanelContainer.new()
   card.custom_minimum_size = Vector2(CARD_WIDTH, 0)
-  card.add_theme_stylebox_override("panel", _panelStyle(4))
-  card.self_modulate = Color(1.2, 1.2, 1.2)
+  card.add_theme_stylebox_override("panel", _cardStyle(4))
   var row := HBoxContainer.new()
   row.add_theme_constant_override("separation", 6)
   card.add_child(row)
@@ -365,6 +380,7 @@ func _makeCard(action: StringName) -> Control:
     slot.add_child(keyButton)
     var removeButton := Button.new()
     removeButton.text = "x"
+    SystemUI.make_danger(removeButton)
     removeButton.disabled = not canRemove
     removeButton.tooltip_text = "Remove" if canRemove else "An action needs at least one key, assign a new one to replace it"
     removeButton.pressed.connect(_removeBinding.bind(action, i))

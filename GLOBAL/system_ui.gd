@@ -68,6 +68,15 @@ static func theme() -> Theme:
   t.set_stylebox("grabber_highlight", "VScrollBar", _box(Color(CYAN, 0.7), Color(CYAN, 0.0), 0.0, 2, 0))
   t.set_stylebox("grabber_pressed", "VScrollBar", _box(CYAN, Color(CYAN, 0.0), 0.0, 2, 0))
 
+  # text fields
+  t.set_stylebox("normal", "LineEdit", _box(Color(0, 0, 0, 0.3), Color(CYAN, 0.4)))
+  t.set_stylebox("focus", "LineEdit", _box(Color(CYAN, 0.08), CYAN, 0.4, 8, 4, 8))
+  t.set_stylebox("read_only", "LineEdit", _box(Color(0, 0, 0, 0.2), Color(CYAN, 0.2)))
+  t.set_color("font_color", "LineEdit", TEXT)
+  t.set_color("font_placeholder_color", "LineEdit", Color(DIM, 0.6))
+  t.set_color("caret_color", "LineEdit", CYAN)
+  t.set_color("selection_color", "LineEdit", Color(CYAN, 0.3))
+
   _theme = t
   return t
 
