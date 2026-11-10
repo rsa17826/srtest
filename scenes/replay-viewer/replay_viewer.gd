@@ -548,7 +548,6 @@ func _input(event: InputEvent) -> void:
   if not active: return
 
   if event is InputEventMouseButton:
-    log.pp(toggleFlyEnabled, flying)
     if event.is_action_pressed("enable_fly_toggle"):
       toggleFlyEnabled = !toggleFlyEnabled
       if toggleFlyEnabled and not flying and not panel.get_global_rect().has_point(event.position):
@@ -567,10 +566,10 @@ func _input(event: InputEvent) -> void:
         _start_flight()
       get_viewport().set_input_as_handled()
       return
-    if flying and event.pressed:
-      if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+    if flying:
+      if event.is_action_pressed("fly_speed_up"):
         fly_mult = clampf(fly_mult * 1.2, 0.1, 100.0)
-      elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+      if event.is_action_pressed("fly_speed_down"):
         fly_mult = clampf(fly_mult / 1.2, 0.1, 100.0)
       get_viewport().set_input_as_handled()
       return

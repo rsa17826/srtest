@@ -20,6 +20,7 @@ const CATEGORIES: Array[Dictionary] = [
   {"name": "Replay Viewer", "actions": [
     &"replay_playpause", &"replay_next_frame", &"replay_prev_frame", &"replay_first_frame", &"replay_last_frame", &"replay_prev_second", &"replay_next_second",
     &"enable_fly", &"enable_fly_toggle", &"fly_up", &"fly_down",
+    &"fly_speed_up", &"fly_speed_down",
     &"forward", &"left", &"right", &"back",
   ]},
 ]

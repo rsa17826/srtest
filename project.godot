@@ -552,6 +552,50 @@ fly_down={
 "script": null
 )]
 }
+fly_speed_up={
+"deadzone": 0.2,
+"events": [Object(InputEventMouseButton,
+"resource_local_to_scene": false,
+"resource_name": "",
+"device": -1,
+"window_id": 0,
+"alt_pressed": false,
+"shift_pressed": false,
+"ctrl_pressed": false,
+"meta_pressed": false,
+"button_mask": 8,
+"position": Vector2(324, 18),
+"global_position": Vector2(333, 66),
+"factor": 1.0,
+"button_index": 4,
+"canceled": false,
+"pressed": true,
+"double_click": false,
+"script": null
+)]
+}
+fly_speed_down={
+"deadzone": 0.2,
+"events": [Object(InputEventMouseButton,
+"resource_local_to_scene": false,
+"resource_name": "",
+"device": -1,
+"window_id": 0,
+"alt_pressed": false,
+"shift_pressed": false,
+"ctrl_pressed": false,
+"meta_pressed": false,
+"button_mask": 16,
+"position": Vector2(272, 15),
+"global_position": Vector2(281, 63),
+"factor": 1.0,
+"button_index": 5,
+"canceled": false,
+"pressed": true,
+"double_click": false,
+"script": null
+)]
+}
 
 [input_devices]
 
