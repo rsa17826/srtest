@@ -150,17 +150,17 @@ func _unhandled_input(event):
         found = true
         break
     if not found: return
-  if event.is_action_pressed("full_restart"):
+  if event.is_action_pressed("full_restart", false, true):
     fullReset()
-  elif event.is_action_pressed("restart"):
+  elif event.is_action_pressed("restart", false, true):
     pending_restart = true
-  if event.is_action_pressed("spawn_grenade"):
+  if event.is_action_pressed("spawn_grenade", false, true):
     pending_grenade_spawn = true
-  elif event.is_action_released("spawn_grenade"):
+  elif event.is_action_released("spawn_grenade", true):
     pending_grenade_spawn = false
-  if event.is_action_pressed("explode_grenade"):
+  if event.is_action_pressed("explode_grenade", false, true):
     pending_grenade_explode = true
-  elif event.is_action_released("explode_grenade"):
+  elif event.is_action_released("explode_grenade", true):
     pending_grenade_explode = false
 
 func dojump():
