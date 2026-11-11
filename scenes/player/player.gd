@@ -41,6 +41,7 @@ var pending_restart := false # restart pressed since the last recorded frame
 var pending_grenade_spawn := false
 var pending_grenade_explode := false
 var canUseGrenade := false
+var needs_prime := false # a recording just started: make the floor/wall flags a function of the position first
 var active_grenade: Grenade
 const DESYNC_THRESHOLD: float = 0.001
 # -------------------------------
@@ -129,6 +130,7 @@ func fullReset():
   currentUserMoveSpeed = 0
   currentUserJumpHeight = 0
   lastGrenadeTick = -999
+  canUseGrenade = false
   levelStarted = false
   for t in global.level.tweens:
     t.kill()
@@ -145,8 +147,8 @@ func _unhandled_input(event):
     var found = false
     for k in [&"forward", &"back", &"left", &"right", &"jump", &"restart", &"explode_grenade", &"full_restart", &"spawn_grenade", ]:
       if event.is_action_pressed(k):
-        levelStarted = true
         start_recording()
+        levelStarted = true
         found = true
         break
     if not found: return
@@ -195,6 +197,7 @@ func updatetrypress(has2: Array, delta):
 func start_recording():
   replay_buffer.clear()
   pending_restart = false
+  needs_prime = true
   replay_frame_index = 0
   current_mode = ReplayMode.RECORDING
   log.pp("--- RECORDING STARTED ---")
@@ -212,6 +215,9 @@ func abort_recording():
 func _physics_process(delta: float) -> void:
   if not levelStarted: return
   if current_mode == ReplayMode.VIEWING: return
+  if needs_prime:
+    needs_prime = false
+    prime_collision_state()
   delta = 1 / 60.0
   var input_dir := Vector2.ZERO
   run_on_tick()
@@ -248,6 +254,15 @@ func _physics_process(delta: float) -> void:
   if current_mode == ReplayMode.RECORDING:
     replay_buffer[replay_frame_index].expected_end_position = global_transform.origin
     replay_frame_index += 1 # also runs on a hazard death, so frames stay aligned
+
+# is_on_floor() / is_on_wall() are left over from the last move_and_slide(), so on the first tick of a recording
+# they depend on whatever happened before. A zero-velocity slide makes them a function of the position alone.
+# ReplayViewer calls this too before simulating frame 0, so both start from the same state.
+func prime_collision_state() -> void:
+  var p := global_position
+  velocity = Vector3.ZERO
+  move_and_slide()
+  global_position = p
 
 # Effects queued by area triggers (die, speed zone, ...). Runs at the very start of a tick, before the
 # frame is recorded; ReplayViewer calls it at the same point of every simulated tick.
@@ -385,6 +400,7 @@ func record_frame(delta: float, input_dir: Vector2):
     "kt": kt,
     "tick_count": tickCount,
     "last_grenade_tick": lastGrenadeTick,
+    "can_use_grenade": canUseGrenade,
     "trypress_jump": trypress.jump,
     "cam_rotation": $cam.rotation,
     "fake_cam_rotation": $fake_cam.rotation
