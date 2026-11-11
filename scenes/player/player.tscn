@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://cpdw82k51fytr" path="res://scenes/player/player.gd" id="1_3f8nb"]
 [ext_resource type="Script" uid="uid://becvtptm7pb77" path="res://scenes/player/ui/debugui.gd" id="4_5qxw0"]
+[ext_resource type="Script" uid="uid://dbksfcoqthtg8" path="res://scenes/player/ui/crosshair.gd" id="5_p47bc"]
 [ext_resource type="Script" uid="uid://bm52lgmpe7708" path="res://scenes/player/ui/prevtime.gd" id="10_xek57"]
 [ext_resource type="Script" uid="uid://dmss2t8rv4nqu" path="res://scenes/player/ui/timer.gd" id="11_se0sd"]
 
@@ -40,6 +41,9 @@ anchor_bottom = 0.5
 grow_horizontal = 2
 grow_vertical = 2
 
+[node name="TextureRect" type="TextureRect" parent="center" unique_id=1928936214]
+layout_mode = 2
+
 [node name="top center" type="CenterContainer" parent="." unique_id=1828376768]
 anchors_preset = 5
 anchor_left = 0.5
@@ -65,3 +69,12 @@ text = "timer"
 horizontal_alignment = 1
 vertical_alignment = 1
 script = ExtResource("11_se0sd")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=956979089]
+
+[node name="Control" type="Control" parent="CanvasLayer" unique_id=1786869652]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("5_p47bc")

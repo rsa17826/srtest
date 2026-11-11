@@ -14,8 +14,9 @@ const downgravity: float = 35
 const upgravity: float = 22
 var currentUserMoveSpeed: float = 0
 var currentUserJumpHeight: float = 0
-var lastGrenadeTick: float = 0
+var lastGrenadeTick: float = -999
 var tickCount: int = 0
+var levelStarted: bool = false
 
 var cpPos := Vector3.ZERO
 
@@ -56,7 +57,7 @@ func getTileId(name):
 @onready var hazard_ids := [
   getTileId("spiky floor"),
   getTileId("spiky box"),
-  getTileId("spiky ball"),
+  # getTileId("spiky ball"),
 ]
 # @onready var playerHeight = $CollisionShape3D.shape.height / 2
 # @onready var playerWidth = $CollisionShape3D.shape.radius / 2
@@ -64,6 +65,8 @@ func getTileId(name):
 func _ready():
   assert(not -1 in hazard_ids, "hazard tile name missing from mesh library")
   fullReset()
+  if global.canCaptureMouse:
+    Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
 func touching_hazard() -> bool:
   for i in get_slide_collision_count():
@@ -88,7 +91,7 @@ func press(key):
   trypress[key] = KEY_MAX_BUFFER
 
 func _input(event):
-  if current_mode == ReplayMode.REPLAYING or current_mode == ReplayMode.VIEWING: return
+  if current_mode == ReplayMode.VIEWING: return
 
   if event is InputEventMouseButton and global.canCaptureMouse:
     Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
@@ -125,12 +128,25 @@ func fullReset():
   velocity = Vector3.ZERO
   currentUserMoveSpeed = 0
   currentUserJumpHeight = 0
-  start_recording()
+  lastGrenadeTick = -999
+  levelStarted = false
+  abort_recording()
 
 func _unhandled_input(event):
   if current_mode == ReplayMode.VIEWING: return
   # inputs only raise flags; step() acts on them, so live play and resimulation do the same thing
-  if event.is_action_pressed("restart"):
+  if not levelStarted:
+    var found = false
+    for k in [&"forward", &"back", &"left", &"right", &"jump", &"restart", &"explode_grenade", &"full_restart", &"spawn_grenade", ]:
+      if event.is_action_pressed(k):
+        levelStarted = true
+        start_recording()
+        found = true
+        break
+    if not found: return
+  if event.is_action_pressed("full_restart"):
+    fullReset()
+  elif event.is_action_pressed("restart"):
     pending_restart = true
   if event.is_action_pressed("spawn_grenade"):
     pending_grenade_spawn = true
@@ -190,33 +206,14 @@ func stop_recording():
   current_mode = ReplayMode.NORMAL
   log.pp("--- RECORDING STOPPED (Frames recorded: ", replay_buffer.size(), ") ---")
   var path := Replays.save(Replays.current_level_name(), replay_buffer)
+  levelStarted = false
   log.pp("Saved replay to ", path)
 
 func abort_recording():
   current_mode = ReplayMode.NORMAL
 
-func start_replay():
-  if replay_buffer.is_empty():
-    log.pp("No replay data found!")
-    return
-
-  current_mode = ReplayMode.REPLAYING
-  replay_frame_index = 0
-
-  var first_frame = replay_buffer[0]
-  global_transform.origin = first_frame.start_position
-  velocity = first_frame.velocity
-  currentUserMoveSpeed = first_frame.currentUserMoveSpeed
-  currentUserJumpHeight = first_frame.currentUserJumpHeight
-  jumps = first_frame.jumps
-  kt = first_frame.kt
-  trypress.jump = first_frame.trypress_jump
-  $cam.rotation = first_frame.cam_rotation
-  $fake_cam.rotation = first_frame.fake_cam_rotation
-
-  log.pp("--- REPLAY STARTED ---")
-
 func _physics_process(delta: float) -> void:
+  if not levelStarted: return
   delta = 1 / 60.0
   var input_dir := Vector2.ZERO
   if current_mode == ReplayMode.VIEWING: return # first line, before `if winning:`
@@ -240,32 +237,8 @@ func _physics_process(delta: float) -> void:
     return
   var has2 = []
 
-  # --- 1. STATE RESTORATION OR INPUT UPDATE ---
-  if current_mode == ReplayMode.REPLAYING:
-    if replay_frame_index >= replay_buffer.size():
-      stop_replay()
-      return
-
-    var data = replay_buffer[replay_frame_index]
-    delta = data.delta
-
-    global_transform.origin = data.start_position
-    velocity = data.velocity
-    currentUserMoveSpeed = data.currentUserMoveSpeed
-    currentUserJumpHeight = data.currentUserJumpHeight
-    jumps = data.jumps
-    kt = data.kt
-    trypress.jump = data.trypress_jump # Injected directly from history
-    $cam.rotation = data.cam_rotation
-    $fake_cam.rotation = data.fake_cam_rotation
-    input_dir = data.input_dir
-    pending_restart = data.restart
-    pending_grenade_spawn = data.pending_grenade_spawn
-    pending_grenade_explode = data.pending_grenade_explode
-  else:
-    # Process physical keyboard/mouse input states for NORMAL and RECORDING modes
-    updatetrypress(has2, delta)
-    input_dir = Input.get_vector("left", "right", "forward", "back")
+  updatetrypress(has2, delta)
+  input_dir = Input.get_vector("left", "right", "forward", "back")
 
   # --- 2. SNAPSHOT: after inputs update, before movement math alters anything ---
   if current_mode == ReplayMode.RECORDING:
@@ -278,9 +251,6 @@ func _physics_process(delta: float) -> void:
   if current_mode == ReplayMode.RECORDING:
     replay_buffer[replay_frame_index].expected_end_position = global_transform.origin
     replay_frame_index += 1 # also runs on a hazard death, so frames stay aligned
-  elif current_mode == ReplayMode.REPLAYING:
-    check_desync(replay_frame_index)
-    replay_frame_index += 1
 
 # Effects queued by area triggers (die, speed zone, ...). Runs at the very start of a tick, before the
 # frame is recorded; ReplayViewer calls it at the same point of every simulated tick.
