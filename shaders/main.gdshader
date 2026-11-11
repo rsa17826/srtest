@@ -38,20 +38,20 @@ float spike_at(float x, float k) {
 
   // Random spike center
   float center = k + 0.5 +
-      (hash(k + 10.0) - 0.5) * spike_randomness;
+    (hash(k + 10.0) - 0.5) * spike_randomness;
 
   // Random width
   float width = spike_width *
-      mix(0.6, 1.4, hash(k + 20.0));
+    mix(0.6, 1.4, hash(k + 20.0));
 
   // Random height
   float height = mix(0.4, 1.0, hash(k + 30.0));
 
   // Animated pulse
   float pulse = 1.0 +
-      spike_pulse * sin(
-          TIME * spike_speed + seed * 6.2831
-      );
+    spike_pulse * sin(
+      TIME * spike_speed + seed * 6.2831
+    );
 
   float dx = abs(x - center);
 
@@ -78,7 +78,7 @@ void vertex() {
   world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 
   world_normal = normalize(
-      (MODEL_MATRIX * vec4(NORMAL, 0.0)).xyz
+    (MODEL_MATRIX * vec4(NORMAL, 0.0)).xyz
   );
 }
 
@@ -90,13 +90,13 @@ void fragment() {
   vec2 uv;
 
   if (n.y > n.x && n.y > n.z) {
-      uv = world_pos.xz;
+    uv = world_pos.xz;
   }
   else if (n.x > n.z) {
-      uv = world_pos.zy;
+    uv = world_pos.zy;
   }
   else {
-      uv = world_pos.xy;
+    uv = world_pos.xy;
   }
 
   // --------------------------------
@@ -106,9 +106,9 @@ void fragment() {
   vec2 d = abs(fract(uv / cell_size) - 0.5);
 
   float grid = smoothstep(
-      0.5 - line_width,
-      0.5,
-      max(d.x, d.y)
+    0.5 - line_width,
+    0.5,
+    max(d.x, d.y)
   );
 
   // --------------------------------
@@ -127,10 +127,10 @@ void fragment() {
 
   // Moving repeating lines
   float line_phase = across / move_spacing
-      - TIME * move_speed;
+    - TIME * move_speed;
 
   float line_distance = abs(
-      fract(line_phase + 0.5) - 0.5
+    fract(line_phase + 0.5) - 0.5
   ) * move_spacing;
 
   // --------------------------------
@@ -141,12 +141,12 @@ void fragment() {
 
   // Give each moving line a spiky silhouette
   float width = move_width +
-      spikes * spike_height;
+    spikes * spike_height;
 
   float moving_line = 1.0 - smoothstep(
-      width,
-      width + 0.01,
-      line_distance
+    width,
+    width + 0.01,
+    line_distance
   );
 
   // --------------------------------
@@ -156,15 +156,15 @@ void fragment() {
   vec3 color = base_color.rgb;
 
   color = mix(
-      color,
-      line_color.rgb,
-      grid
+    color,
+    line_color.rgb,
+    grid
   );
 
   color = mix(
-      color,
-      move_color.rgb,
-      moving_line
+    color,
+    move_color.rgb,
+    moving_line
   );
 
   // --------------------------------
@@ -172,10 +172,10 @@ void fragment() {
   // --------------------------------
 
   vec3 emission =
-      line_color.rgb * grid * emission_strength;
+    line_color.rgb * grid * emission_strength;
 
   emission +=
-      move_color.rgb * moving_line * move_emission;
+    move_color.rgb * moving_line * move_emission;
 
   ALBEDO = color;
   EMISSION = emission;

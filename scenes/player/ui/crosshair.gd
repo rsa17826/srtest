@@ -4,7 +4,8 @@ class_name Crosshair
 # System-window styling: four ticks with a glow, a centre dot, and a ring that fills while the grenade recharges.
 # The ticks spread out with the player's horizontal speed. Hidden while the replay viewer is open.
 
-@export var color := Color(0.25, 0.85, 1.0)
+@export var blueColor := Color(0.25, 0.85, 1.0)
+@export var redColor := Color(0.85, 0.05, 1.0)
 @export var base_gap := 5.0 # distance of the ticks from the centre when standing still
 @export var spread := 9.0 # extra gap at full speed
 @export var full_speed := 25.0 # horizontal speed that counts as "full"
@@ -24,8 +25,7 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
   visible = player.current_mode != Player.ReplayMode.VIEWING
-  if not visible:
-    return
+  if not visible: return
   var speed := Vector2(player.velocity.x, player.velocity.z).length()
   gap = lerpf(gap, base_gap + clampf(speed / full_speed, 0.0, 1.0) * spread, 1.0 - exp(-14.0 * delta))
   queue_redraw()
@@ -33,6 +33,7 @@ func _process(delta: float) -> void:
 func _draw() -> void:
   var c := size * 0.5
   var white := Color(0.9, 0.99, 1.0)
+  var color = blueColor if player.canUseGrenade else redColor
 
   # four ticks: soft glow, cyan body, white core
   for dir: Vector2 in [Vector2.UP, Vector2.DOWN, Vector2.LEFT, Vector2.RIGHT]:

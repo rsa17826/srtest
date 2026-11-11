@@ -14,13 +14,13 @@ func __get() -> Variant:
   if "lastinp" not in self._data:
     log.err("No lastinp", self)
     return
-  var val: Variant = self.cache[ self._data.lastinp]
+  var val: Variant = self.cache[self._data.lastinp]
   self._data.erase("lastinp")
   return val
 func __set(value: Variant) -> Variant:
   if "lastinp" not in self._data:
     log.err("No lastinp", self)
     return
-  self.cache[ self._data.lastinp] = value
+  self.cache[self._data.lastinp] = value
   self._data.erase("lastinp")
   return value

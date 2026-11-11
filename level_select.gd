@@ -42,7 +42,6 @@ func _ready() -> void:
   vbox.add_child(SystemUI.dim_label("REPLAYS ARE SAVED TO user://replays/<level>/"))
   _show_levels()
   SystemUI.fade_in(window)
-  SystemUI.pulse(window)
 
 func _clear() -> void:
   for c in content.get_children():

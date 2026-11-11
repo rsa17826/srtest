@@ -90,7 +90,6 @@ func _build_ui() -> void:
   panel = PanelContainer.new()
   panel.theme = SystemUI.theme()
   SystemUI.add_brackets(panel)
-  SystemUI.pulse(panel)
   panel.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
   panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
   add_child(panel)
@@ -599,7 +598,6 @@ func _input(event: InputEvent) -> void:
     elif _replay_pressed(event, "replay_next_frame"):
       _step(1)
       get_viewport().set_input_as_handled()
-
 
 const FLY_ACTIONS: Array[StringName] = [&"forward", &"back", &"left", &"right", &"fly_up", &"fly_down"]
 

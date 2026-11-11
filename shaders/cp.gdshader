@@ -101,14 +101,14 @@ void fragment() {
   float scan = pow(1.0 - abs(fract(y01 - TIME * scan_speed) * 2.0 - 1.0), 24.0);
 
   float grids = grid(p, grid_size, line_width * 0.5, aa) * 0.18
-      + grid(p, grid_size * 4.0, line_width * 0.8, aa) * 0.4;
+    + grid(p, grid_size * 4.0, line_width * 0.8, aa) * 0.4;
 
   float rings = ring(rad, ang, R * 0.82, line_width, aa, 0.0, 0.0, 0.0, 1.0) * 0.8
-      + ring(rad, ang, R * 0.68, line_width * 2.5, aa, 12.0, 1.0, TIME * 0.05, 0.6)
-      + ring(rad, ang, R * 0.52, line_width * 1.8, aa, 9.0, 2.0, -TIME * 0.08, 0.55)
-      + ring(rad, ang, R * 0.38, line_width * 0.8, aa, 0.0, 0.0, 0.0, 1.0) * 0.7
-      + ring(rad, ang, R * 0.27, line_width * 3.0, aa, 6.0, 3.0, TIME * 0.12, 0.5)
-      + ticks(rad, ang, R * 0.9, R * 0.07, 72.0, line_width * 0.6, aa, TIME * 0.02) * 0.8;
+    + ring(rad, ang, R * 0.68, line_width * 2.5, aa, 12.0, 1.0, TIME * 0.05, 0.6)
+    + ring(rad, ang, R * 0.52, line_width * 1.8, aa, 9.0, 2.0, -TIME * 0.08, 0.55)
+    + ring(rad, ang, R * 0.38, line_width * 0.8, aa, 0.0, 0.0, 0.0, 1.0) * 0.7
+    + ring(rad, ang, R * 0.27, line_width * 3.0, aa, 6.0, 3.0, TIME * 0.12, 0.5)
+    + ticks(rad, ang, R * 0.9, R * 0.07, 72.0, line_width * 0.6, aa, TIME * 0.02) * 0.8;
 
   // circuit traces near the top and bottom, with pulses running along them
   float traces = 0.0;
@@ -137,8 +137,8 @@ void fragment() {
   float bl = R * 0.24;
   float bw = line_width * 2.5;
   float frame = stroke(abs(edge - line_width), line_width * 0.6, aa) * 0.5
-      + stroke(abs(e.x - bw), bw, aa) * step(e.y, bl)
-      + stroke(abs(e.y - bw), bw, aa) * step(e.x, bl);
+    + stroke(abs(e.x - bw), bw, aa) * step(e.y, bl)
+    + stroke(abs(e.y - bw), bw, aa) * step(e.x, bl);
 
   // center mark: diamond before, checkmark after
   float diamond = stroke(abs(abs(p.x) + abs(p.y) - 0.14 * R), line_width * 1.5, aa);

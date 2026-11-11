@@ -33,7 +33,8 @@ ToastParty is an autoload singleton and is used as follows:
 })
 ```
 
-## Thanks to 
+## Thanks to
+
 @davcri
 
 ## License

@@ -12,7 +12,7 @@ const DANGER := Color(1.0, 0.4, 0.4)
 
 static var _theme: Theme
 
-static func _box(bg: Color, border: Color, glow := 0.0, mx := 8, my := 4, glow_size := 10) -> StyleBoxFlat:
+static func _box(bg: Color, border: Color, glow:=0.0, mx:=8, my:=4, glow_size:=10) -> StyleBoxFlat:
   var s := StyleBoxFlat.new()
   s.bg_color = bg
   s.border_color = border
@@ -27,7 +27,7 @@ static func _box(bg: Color, border: Color, glow := 0.0, mx := 8, my := 4, glow_s
   return s
 
 # a button face: same as _box but sheared so it reads as a slanted HUD tab
-static func _tab(bg: Color, border: Color, glow := 0.0, glow_size := 8) -> StyleBoxFlat:
+static func _tab(bg: Color, border: Color, glow:=0.0, glow_size:=8) -> StyleBoxFlat:
   var s := _box(bg, border, glow, 12, 4, glow_size)
   s.skew = Vector2(0.12, 0.0)
   return s
@@ -168,19 +168,15 @@ class SystemFrame extends Node:
     host.draw_line(Vector2(tx, ty), Vector2(tx + 36.0, ty), Color(white, 0.9), 2.0)
     host.draw_circle(Vector2(tx + 36.0, ty), 2.5, white)
 
-    # a light running along the top edge
-    var head := fposmod(t * 140.0, size.x + 100.0) - 50.0
-    host.draw_line(Vector2(maxf(head, 14.0), 1.0), Vector2(clampf(head + 70.0, 14.0, size.x - 4.0), 1.0), Color(1, 1, 1, 0.85), 2.0)
-
 # Frame a PanelContainer (or any Control) in the system look; the panel's content margins keep the content clear of it.
-static func add_frame(host: Control, accent := CYAN) -> SystemFrame:
+static func add_frame(host: Control, accent:=CYAN) -> SystemFrame:
   var frame := SystemFrame.new()
   frame.accent = accent
   host.add_child(frame)
   return frame
 
 # kept for the existing callers
-static func add_brackets(host: Control, _length := 10.0) -> void:
+static func add_brackets(host: Control, _length:=10.0) -> void:
   add_frame(host)
 
 # ---------------------------------------------------------------- header / small pieces
@@ -238,13 +234,10 @@ static func fade_in(c: Control) -> void:
 # Put `content` into a ScrollContainer with room around it. A ScrollContainer clips everything it draws,
 # so without this the glow and slanted edges of buttons at its borders get cut off and the buttons look
 # too wide for their space.
-static func scroll_pad(scroll: ScrollContainer, content: Control, pad := 8) -> void:
+static func scroll_pad(scroll: ScrollContainer, content: Control, pad:=8) -> void:
   var m := MarginContainer.new()
   m.size_flags_horizontal = Control.SIZE_EXPAND_FILL
   for side in ["left", "right", "top", "bottom"]:
     m.add_theme_constant_override("margin_" + side, pad)
   scroll.add_child(m)
   m.add_child(content)
-
-# the frame breathes by itself now, this stays so older calls still compile
-static func pulse(_c: Control) -> void: pass
