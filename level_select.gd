@@ -37,7 +37,7 @@ func _ready() -> void:
   content = VBoxContainer.new()
   content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
   content.add_theme_constant_override("separation", 3)
-  scroll.add_child(content)
+  SystemUI.scroll_pad(scroll, content)
 
   vbox.add_child(SystemUI.dim_label("REPLAYS ARE SAVED TO user://replays/<level>/"))
   _show_levels()

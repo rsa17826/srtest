@@ -70,26 +70,25 @@ func _buildUi() -> void:
   add_child(dim)
   var panel := PanelContainer.new()
   panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, 16)
-  var mainStyle := _panelStyle(8) as StyleBoxFlat
+  var mainStyle := _panelStyle(12) # room for the frame: its cut corners, inner line and ornaments
+  mainStyle.content_margin_left = 16
+  mainStyle.content_margin_right = 16
   panel.add_theme_stylebox_override("panel", mainStyle)
   add_child(panel)
-  SystemUI.add_brackets(panel)
-  var glow := create_tween().set_loops() # slow breathing glow on the border, like the other windows
-  glow.tween_property(mainStyle, "shadow_size", 22, 1.4).set_trans(Tween.TRANS_SINE)
-  glow.tween_property(mainStyle, "shadow_size", 12, 1.4).set_trans(Tween.TRANS_SINE)
+  SystemUI.add_frame(panel)
   var root := VBoxContainer.new()
-  root.add_theme_constant_override("separation", 6)
+  root.add_theme_constant_override("separation", 8)
   panel.add_child(root)
 
   var header := HBoxContainer.new()
-  header.add_theme_constant_override("separation", 6)
+  header.add_theme_constant_override("separation", 10)
   root.add_child(header)
   var title := Label.new()
   title.text = "[ KEYBINDS ]"
   title.add_theme_font_size_override("font_size", 22)
   title.add_theme_color_override("font_color", SystemUI.CYAN)
   title.add_theme_color_override("font_shadow_color", Color(SystemUI.CYAN, 0.7))
-  title.add_theme_constant_override("shadow_outline_size", 10)
+  title.add_theme_constant_override("shadow_outline_size", 6)
   header.add_child(title)
   _search = LineEdit.new()
   _search.placeholder_text = "Search actions or keys..."
@@ -108,18 +107,18 @@ func _buildUi() -> void:
 
   var body := HBoxContainer.new()
   body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-  body.add_theme_constant_override("separation", 6)
+  body.add_theme_constant_override("separation", 10)
   root.add_child(body)
   var sidebar := PanelContainer.new()
-  sidebar.custom_minimum_size = Vector2(190, 0)
-  sidebar.add_theme_stylebox_override("panel", _cardStyle(4))
+  sidebar.custom_minimum_size = Vector2(250, 0)
+  sidebar.add_theme_stylebox_override("panel", _cardStyle(6))
   body.add_child(sidebar)
   var sidebarScroll := ScrollContainer.new()
   sidebarScroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
   sidebar.add_child(sidebarScroll)
   _categoryList = VBoxContainer.new()
   _categoryList.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-  sidebarScroll.add_child(_categoryList)
+  SystemUI.scroll_pad(sidebarScroll, _categoryList)
   var contentScroll := ScrollContainer.new()
   contentScroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
   contentScroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -127,11 +126,12 @@ func _buildUi() -> void:
   _content = VBoxContainer.new()
   _content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
   _content.add_theme_constant_override("separation", 6)
-  contentScroll.add_child(_content)
+  SystemUI.scroll_pad(contentScroll, _content)
 
   var hint := Label.new()
   hint.text = "Click a key to change it, + to add another, x or right click to remove one."
   hint.add_theme_color_override("font_color", SystemUI.DIM)
+  hint.add_theme_constant_override("shadow_outline_size", 0)
   root.add_child(hint)
 
   _buildPrompt()
@@ -146,8 +146,8 @@ func _panelStyle(margin: int) -> StyleBox:
 ## flat, glow-free box for the many small panels (sidebar, cards), the big window keeps the glowing one
 func _cardStyle(margin: int) -> StyleBox:
   var style := StyleBoxFlat.new()
-  style.bg_color = Color(SystemUI.CYAN, 0.05)
-  style.border_color = Color(SystemUI.CYAN, 0.35)
+  style.bg_color = Color(0.1, 0.5, 0.95, 0.12)
+  style.border_color = Color(0.45, 0.88, 1.0, 0.5)
   style.set_border_width_all(1)
   style.set_content_margin_all(margin)
   return style
@@ -164,9 +164,9 @@ func _buildPrompt() -> void:
   _promptDim.add_child(center)
   _promptPanel = PanelContainer.new()
   _promptPanel.custom_minimum_size = Vector2(420, 0)
-  _promptPanel.add_theme_stylebox_override("panel", _panelStyle(10))
+  _promptPanel.add_theme_stylebox_override("panel", _panelStyle(16))
   center.add_child(_promptPanel)
-  SystemUI.add_brackets(_promptPanel)
+  SystemUI.add_frame(_promptPanel)
   var box := VBoxContainer.new()
   box.add_theme_constant_override("separation", 6)
   _promptPanel.add_child(box)
@@ -276,6 +276,7 @@ func _refreshCategoryList() -> void:
       var groupsHeader := Label.new()
       groupsHeader.text = "Editor bar rows"
       groupsHeader.add_theme_color_override("font_color", SystemUI.DIM)
+      groupsHeader.add_theme_constant_override("shadow_outline_size", 0)
       _categoryList.add_child(groupsHeader)
     var button := Button.new()
     button.text = "%s  (%d)" % [categoryName, len(_categoryActions[categoryName])]
@@ -316,8 +317,8 @@ func _refreshContent() -> void:
     header.add_theme_color_override("font_color", SystemUI.CYAN)
     _content.add_child(header)
     var flow := HFlowContainer.new()
-    flow.add_theme_constant_override("h_separation", 4)
-    flow.add_theme_constant_override("v_separation", 4)
+    flow.add_theme_constant_override("h_separation", 8)
+    flow.add_theme_constant_override("v_separation", 8)
     _content.add_child(flow)
     for action: StringName in actions:
       flow.add_child(_makeCard(action))
@@ -325,7 +326,7 @@ func _refreshContent() -> void:
 func _makeCard(action: StringName) -> Control:
   var card := PanelContainer.new()
   card.custom_minimum_size = Vector2(CARD_WIDTH, 0)
-  card.add_theme_stylebox_override("panel", _cardStyle(4))
+  card.add_theme_stylebox_override("panel", _cardStyle(6))
   var row := HBoxContainer.new()
   row.add_theme_constant_override("separation", 6)
   card.add_child(row)
