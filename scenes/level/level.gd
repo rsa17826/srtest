@@ -6,6 +6,7 @@ func _init() -> void:
   global.level = self
 var checkpoints: Array = []
 var triggers: Array = [] # [{"area": Area3D, "on_enter": Callable}], used by ReplayViewer
+var tweens: Array[Tween] = []
 
 func add_trigger(area: Area3D, on_enter: Callable) -> void:
   triggers.append({"area": area, "on_enter": on_enter})
@@ -118,7 +119,10 @@ func replace_with_nodes(grid: GridMap, tile: String) -> Dictionary:
 func collect_checkpoint(pane: MeshInstance3D) -> void:
   if pane.has_meta("collected"): return
   pane.set_meta("collected", true)
-  create_tween().tween_method(
+  var t = create_tween()
+  t.tween_method(
     func(v: float) -> void: pane.set_instance_shader_parameter("collected", v),
     0.0, 1.0, 0.8)
+  t.tween_callback(func(): tweens.erase(t))
+  tweens.append(t)
   global.player.setCheckpoint(pane.global_position)

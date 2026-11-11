@@ -130,6 +130,13 @@ func fullReset():
   currentUserJumpHeight = 0
   lastGrenadeTick = -999
   levelStarted = false
+  log.pp(global.level.tweens)
+  for t in global.level.tweens:
+    t.kill()
+  global.level.tweens.clear()
+  for cp in global.level.checkpoints:
+    cp.pane.remove_meta("collected")
+    cp.pane.set_instance_shader_parameter("collected", 0)
   abort_recording()
 
 func _unhandled_input(event):
@@ -156,15 +163,6 @@ func _unhandled_input(event):
     pending_grenade_explode = true
   elif event.is_action_released("explode_grenade"):
     pending_grenade_explode = false
-  # if event.is_action_pressed("ui_focus_next"):
-  #   if current_mode == ReplayMode.NORMAL:
-  #     position = Vector3.ZERO
-  #     velocity = Vector3.ZERO
-  #     start_recording()
-  #   elif current_mode == ReplayMode.RECORDING:
-  #     stop_recording()
-  # if event.is_action_pressed("ui_accept") and current_mode == ReplayMode.NORMAL:
-  #   start_replay()
 
 func dojump():
   velocity.y = currentUserJumpHeight
