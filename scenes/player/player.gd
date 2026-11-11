@@ -214,9 +214,9 @@ func abort_recording():
 
 func _physics_process(delta: float) -> void:
   if not levelStarted: return
+  if current_mode == ReplayMode.VIEWING: return
   delta = 1 / 60.0
   var input_dir := Vector2.ZERO
-  if current_mode == ReplayMode.VIEWING: return # first line, before `if winning:`
   run_on_tick()
   if winning:
     winTimer += delta
@@ -229,7 +229,7 @@ func _physics_process(delta: float) -> void:
     win_mat.set_shader_parameter("spin_offset", win_spin)
     global_position.y = win_startY + global.rerange_clamp(winTimer, 0, 1, 0, 10)
     if current_mode == ReplayMode.RECORDING:
-      replay_buffer[replay_frame_index].expected_end_position = global_position # was left at (0,0,0)
+      replay_buffer[replay_frame_index].expected_end_position = global_position
       replay_frame_index += 1
     if winTimer >= 1:
       stop_recording()
@@ -260,7 +260,7 @@ func run_on_tick() -> void:
 
 func spawnGrenade() -> void:
   var g: Grenade = preload("res://scenes/grenade/main.tscn").instantiate()
-  get_parent().add_child(g) # not a child of the player, or it would move with it
+  get_parent().add_child(g)
   g.global_position = $cam.global_position
   g.velocity = -$cam.global_transform.basis.z * Grenade.THROW_SPEED + velocity
   g.add_collision_exception_with(self)
