@@ -130,7 +130,6 @@ func fullReset():
   currentUserJumpHeight = 0
   lastGrenadeTick = -999
   levelStarted = false
-  log.pp(global.level.tweens)
   for t in global.level.tweens:
     t.kill()
   global.level.tweens.clear()
