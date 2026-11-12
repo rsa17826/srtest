@@ -678,6 +678,14 @@ fancy_folder_icons/textureAppliesToNestedFolders=true
 [rendering]
 
 rendering_device/driver.windows="d3d12"
-lights_and_shadows/multi_bounce_occlusion/enabled=true
+lights_and_shadows/positional_shadow/soft_shadow_filter_quality=0
+global_illumination/gi/use_half_resolution=true
+shading/overrides/force_vertex_shading=true
+shading/overrides/force_lambert_over_burley=true
+driver/depth_prepass/enable=false
+environment/ssao/quality=0
+environment/ssil/quality=0
+environment/glow/upscale_mode=0
 global_illumination/sdfgi/frames_to_converge=0
+environment/volumetric_fog/use_filter=0
 environment/defaults/default_clear_color=Color(0.1, 0.3, 0.33, 0.5)

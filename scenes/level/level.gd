@@ -42,22 +42,7 @@ func _ready() -> void:
   env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
   env.ambient_light_energy = 0.8
 
-  env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-  env.ssao_enabled = true
-  env.ssao_radius = 1.5
-  env.ssao_intensity = 2.0
-  env.glow_enabled = true
-  env.glow_intensity = 0.6
-  env.glow_bloom = 0.1
-
-  env.fog_enabled = true
-  env.fog_light_color = Color("#c4a0f0")
-  env.fog_density = 0.003
-  env.fog_sky_affect = 0.3
-
-  env.adjustment_enabled = true
-  env.adjustment_saturation = 1.15
-  env.adjustment_contrast = 1.05
+  env.tonemap_mode = Environment.TONE_MAPPER_REINHARDT
 
   var world_env := WorldEnvironment.new()
   world_env.environment = env
