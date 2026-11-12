@@ -50,6 +50,8 @@ func _ready() -> void:
 
   var sun := DirectionalLight3D.new()
   sun.rotation_degrees = Vector3(-50, -30, 0)
+  sun.light_bake_mode = DirectionalLight3D.BAKE_STATIC
+  sun.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
   sun.light_color = Color("#fff1d6")
   sun.shadow_enabled = true
   sun.directional_shadow_max_distance = 60.0
