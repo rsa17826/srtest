@@ -115,6 +115,7 @@ func die():
   position = cpPos
   currentUserMoveSpeed = 0
   currentUserJumpHeight = 0
+  canUseGrenade = true
   velocity = Vector3.ZERO
 
 func fullReset():
@@ -130,7 +131,7 @@ func fullReset():
   currentUserMoveSpeed = 0
   currentUserJumpHeight = 0
   lastGrenadeTick = -999
-  canUseGrenade = false
+  canUseGrenade = true
   levelStarted = false
   for t in global.level.tweens:
     t.kill()
