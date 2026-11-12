@@ -1,7 +1,7 @@
 extends Node3D
 class_name Level
 
-@export var gridmap: GridMap
+@export var gridmap: MergedGridMap
 func _init() -> void:
   global.level = self
 var checkpoints: Array = []
@@ -70,7 +70,7 @@ func _ready() -> void:
   sun.shadow_enabled = true
   sun.directional_shadow_max_distance = 60.0
   add_child(sun)
-func spawn_areas(grid: GridMap, tile: String) -> Array[Area3D]:
+func spawn_areas(grid: MergedGridMap, tile: String) -> Array[Area3D]:
   var id := grid.mesh_library.find_item_by_name(tile)
   assert(id != -1, "no tile named '%s' in the mesh library" % tile)
 
@@ -99,7 +99,7 @@ func _relative_transform(node: Node3D, root: Node) -> Transform3D:
     node = node.get_parent()
   return x
 # swaps every cell of a tile for a standalone MeshInstance3D, returns cell -> node
-func replace_with_nodes(grid: GridMap, tile: String) -> Dictionary:
+func replace_with_nodes(grid: MergedGridMap, tile: String) -> Dictionary:
   var lib := grid.mesh_library
   var id := lib.find_item_by_name(tile)
   assert(id != -1, "no tile named '%s' in the mesh library" % tile)

@@ -50,7 +50,7 @@ func _init() -> void:
 
 var onTick: Array[Callable] = []
 
-@onready var grid: GridMap = global.level.gridmap
+@onready var grid: MergedGridMap = global.level.gridmap
 func getTileId(name):
   var id := grid.mesh_library.find_item_by_name(name)
   assert(id != -1, "tile " + name + " missing from mesh library")
@@ -74,7 +74,7 @@ func touching_hazard() -> bool:
     var col := get_slide_collision(i)
     if col.get_collider() != grid: continue
     # step a little *into* the surface so the point lands in the tile we hit
-    var cell := grid.local_to_map(grid.to_local(col.get_position() - col.get_normal() * 0.05))
+    var cell = grid.local_to_map(grid.to_local(col.get_position() - col.get_normal() * 0.05))
     if grid.get_cell_item(cell) in hazard_ids: return true
   return false
 
