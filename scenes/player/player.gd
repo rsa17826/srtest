@@ -72,9 +72,9 @@ func _ready():
 func touching_hazard() -> bool:
   for i in get_slide_collision_count():
     var col := get_slide_collision(i)
-    if col.get_collider() != grid: continue
+    if not grid.owns_collider(col.get_collider()): continue
     # step a little *into* the surface so the point lands in the tile we hit
-    var cell = grid.local_to_map(grid.to_local(col.get_position() - col.get_normal() * 0.05))
+    var cell := grid.local_to_map(grid.to_local(col.get_position() - col.get_normal() * 0.05))
     if grid.get_cell_item(cell) in hazard_ids: return true
   return false
 

@@ -40,6 +40,13 @@ func set_cell_item(cell: Vector3i, item: int, orientation: int = 0) -> void:
 func map_to_local(cell: Vector3i) -> Vector3:
   return (Vector3(cell) + Vector3(0.5, 0.5, 0.5)) * cell_size
 
+func local_to_map(pos: Vector3) -> Vector3i:
+  return Vector3i((pos / cell_size).floor())
+
+# true if a collision's collider is this map's physics body (it is rebuilt, so don't cache it)
+func owns_collider(collider: Object) -> bool:
+  return collider == _body
+
 # merged boxes of one item, each with xform = the transform its mesh/collision is stretched by
 func get_boxes_by_item(item: int) -> Array:
   if _dirty: rebuild()
