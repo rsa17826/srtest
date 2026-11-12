@@ -56,7 +56,7 @@ func getTileId(name):
   assert(id != -1, "tile " + name + " missing from mesh library")
   return id
 @onready var hazard_ids := [
-  getTileId("spiky floor"),
+  # getTileId("spiky floor"),
   getTileId("spiky box"),
   # getTileId("spiky ball"),
 ]

@@ -17,8 +17,8 @@ func _ready() -> void:
     area.body_entered.connect(func(body): if body is Player: body.win(area))
   for area in spawn_areas(gridmap, "spiky ball"):
     add_trigger(area, func(body): if body is Player: body.onTick.append(body.die))
-  for area in spawn_areas(gridmap, "speed zone"):
-    add_trigger(area, func(body): if body is Player: body.onTick.append(func(): if body.currentUserMoveSpeed < 20: body.currentUserMoveSpeed=20))
+  # for area in spawn_areas(gridmap, "speed zone"):
+  #   add_trigger(area, func(body): if body is Player: body.onTick.append(func(): if body.currentUserMoveSpeed < 20: body.currentUserMoveSpeed=20))
 
   var cp_areas := spawn_areas(gridmap, "cp")
   var cp_panes := replace_with_nodes(gridmap, "cp")
