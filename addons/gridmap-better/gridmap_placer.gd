@@ -37,7 +37,7 @@ void fragment() {
 }
 """
 
-var grid: GridMap
+var grid: MergedGridMap
 var lib: MeshLibrary
 var ghost: MeshInstance3D
 var outline: MeshInstance3D
@@ -55,7 +55,7 @@ var enabled_check: CheckBox
 var layer_label: Label
 var item_list: ItemList
 
-var selected_item := GridMap.INVALID_CELL_ITEM
+var selected_item := MergedGridMap.INVALID_CELL_ITEM
 var rotation_index := 0
 var level := 0 # work-plane layer (cell y) used when the ray hits no block
 var drag_y := 0 # layer locked while drag-painting
@@ -94,7 +94,7 @@ func _exit_tree() -> void:
   panel.queue_free()
 
 func _handles(object: Object) -> bool:
-  return object is GridMap and (object as GridMap).mesh_library != null
+  return object is MergedGridMap and (object as MergedGridMap).mesh_library != null
 
 func _make_visible(visible: bool) -> void:
   panel.visible = visible
@@ -104,11 +104,11 @@ func _make_visible(visible: bool) -> void:
 func _edit(object: Object) -> void:
   _detach()
   if object != null:
-    _attach(object as GridMap)
+    _attach(object as MergedGridMap)
 
 # ---------------------------------------------------------------- setup
 
-func _attach(g: GridMap) -> void:
+func _attach(g: MergedGridMap) -> void:
   grid = g
   lib = grid.mesh_library
 
@@ -215,7 +215,7 @@ func _refresh_items() -> void:
       item_list.select(idx)
 
   if ids.is_empty():
-    selected_item = GridMap.INVALID_CELL_ITEM
+    selected_item = MergedGridMap.INVALID_CELL_ITEM
     _sync_ghost_mesh()
   elif not selected_item in ids:
     item_list.select(0)
@@ -229,7 +229,7 @@ func _on_item_selected(idx: int) -> void:
   _update_visuals()
 
 func _sync_ghost_mesh() -> void:
-  if selected_item == GridMap.INVALID_CELL_ITEM:
+  if selected_item == MergedGridMap.INVALID_CELL_ITEM:
     ghost.mesh = null
   else:
     ghost.mesh = lib.get_item_mesh(selected_item)
@@ -297,7 +297,7 @@ func _input(event: InputEvent) -> void:
     _consume() # always, otherwise the built-in tool places its own block
     _update_target(camera)
     if not has_target: return
-    if not erasing and selected_item == GridMap.INVALID_CELL_ITEM:
+    if not erasing and selected_item == MergedGridMap.INVALID_CELL_ITEM:
       push_warning("gridmap_placer: no tile selected in the palette")
       return
     painting = true
@@ -414,7 +414,7 @@ func _march(o: Vector3, d: Vector3) -> Dictionary:
     var t := t_max[axis]
     cell[axis] += step[axis]
     t_max[axis] += t_delta[axis]
-    if grid.get_cell_item(cell) != GridMap.INVALID_CELL_ITEM:
+    if grid.get_cell_item(cell) != MergedGridMap.INVALID_CELL_ITEM:
       var normal := Vector3i.ZERO
       normal[axis] = - step[axis]
       return {"t": t, "cell": cell, "normal": normal}
@@ -424,7 +424,7 @@ func _march(o: Vector3, d: Vector3) -> Dictionary:
 
 func _update_visuals() -> void:
   var show := enabled_check.button_pressed and has_target
-  ghost.visible = show and not erasing and selected_item != GridMap.INVALID_CELL_ITEM
+  ghost.visible = show and not erasing and selected_item != MergedGridMap.INVALID_CELL_ITEM
   outline.visible = show
   plane.visible = show
   if not show: return
@@ -437,16 +437,16 @@ func _update_visuals() -> void:
   plane_mat.set_shader_parameter("color", ERASE_COLOR if erasing else PLACE_COLOR)
 
   if ghost.visible:
-    var rot := Basis(Vector3.UP, rotation_index * PI / 2.0).scaled(Vector3.ONE * grid.cell_scale)
+    var rot := Basis(Vector3.UP, rotation_index * PI / 2.0)
     ghost.transform = Transform3D(rot, grid.map_to_local(target_cell)) * lib.get_item_mesh_transform(selected_item)
 
 # ---------------------------------------------------------------- editing
 
 func _orientation() -> int:
-  return grid.get_orthogonal_index_from_basis(Basis(Vector3.UP, rotation_index * PI / 2.0))
+  return rotation_index
 
 func _apply(cell: Vector3i) -> void:
-  var item := GridMap.INVALID_CELL_ITEM if erasing else selected_item
+  var item := MergedGridMap.INVALID_CELL_ITEM if erasing else selected_item
   var orient := 0 if erasing else _orientation()
   var old_item := grid.get_cell_item(cell)
   var old_orient := grid.get_cell_item_orientation(cell)
