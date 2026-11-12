@@ -317,6 +317,9 @@ func _simulate(buf: Array) -> void:
   player.currentUserJumpHeight = first.currentUserJumpHeight
   player.jumps = first.jumps
   player.kt = first.kt
+  player.tickCount = first.tick_count
+  player.lastGrenadeTick = first.last_grenade_tick
+  player.canUseGrenade = first.can_use_grenade
 
   var trigger_query := PhysicsShapeQueryParameters3D.new()
   trigger_query.shape = player.get_node("CollisionShape3D").shape
@@ -351,9 +354,16 @@ func _simulate(buf: Array) -> void:
     player.pending_grenade_explode = f.pending_grenade_explode
     positions[i] = player.global_position
     player.trypress.jump = f.trypress_jump
+    var gp = f.grenade_pos
+    var g := player.active_grenade
+    # NOTE breaks at exactly 0 but that won't happen, but needs to be always a vec3
+    if (gp == Vector3.ZERO) != (g == null):
+      log.pp("grenade existence differs at frame", i, gp, g)
+    elif gp != Vector3.ZERO and g.global_position != gp and first_diverge == -1:
+      log.pp("grenade position differs at frame", i, gp, g.global_position, g.ticks)
     player.step(f.delta, f.input_dir)
     if player.active_grenade != null:
-      var g := player.active_grenade
+      g = player.active_grenade
       grenade_frames[i] = [Vector4(g.global_position.x, g.global_position.y, g.global_position.z, float(g.ticks) / g.fuse_ticks)]
     else:
       grenade_frames[i] = []

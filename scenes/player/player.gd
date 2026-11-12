@@ -398,6 +398,7 @@ func record_frame(delta: float, input_dir: Vector2):
     "currentUserJumpHeight": currentUserJumpHeight,
     "jumps": jumps,
     "kt": kt,
+    "grenade_pos": active_grenade.global_position if active_grenade != null else Vector3.ZERO,
     "tick_count": tickCount,
     "last_grenade_tick": lastGrenadeTick,
     "can_use_grenade": canUseGrenade,

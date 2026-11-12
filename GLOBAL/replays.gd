@@ -5,7 +5,7 @@ const ROOT := "user://replays"
 const LEVEL_DIR := "res://scenes/level"
 const MENU_SCENE := "res://scenes/level-select/level-select.tscn" # one-node scene: Control + level_select.gd
 
-const VEC3_KEYS := ["start_position", "expected_end_position", "velocity", "cam_rotation", "fake_cam_rotation", "cp_pos"]
+const VEC3_KEYS := ["start_position", "expected_end_position", "velocity", "cam_rotation", "fake_cam_rotation", "cp_pos", "grenade_pos"]
 const VEC2_KEYS := ["input_dir"]
 const INT_KEYS := ["jumps", "trypress_jump"]
 
