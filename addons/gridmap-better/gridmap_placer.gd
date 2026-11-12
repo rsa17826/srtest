@@ -289,8 +289,7 @@ func _input(event: InputEvent) -> void:
     return # motion is never consumed, so orbit/pan keep working
 
   if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-    if event.alt_pressed:
-      return # alt+click is camera navigation
+    if event.alt_pressed: return
     last_mouse = (event.position - container.global_position) / container.stretch_shrink
     erasing = event.shift_pressed
     click_held = true

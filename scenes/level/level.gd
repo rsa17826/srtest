@@ -13,19 +13,19 @@ func add_trigger(area: Area3D, on_enter: Callable) -> void:
   area.body_entered.connect(on_enter)
 
 func _ready() -> void:
-  for area in spawn_areas(gridmap, "goal"):
-    area.body_entered.connect(func(body): if body is Player: body.win(area))
-  for area in spawn_areas(gridmap, "spiky ball"):
-    add_trigger(area, func(body): if body is Player: body.onTick.append(body.die))
-  # for area in spawn_areas(gridmap, "speed zone"):
-  #   add_trigger(area, func(body): if body is Player: body.onTick.append(func(): if body.currentUserMoveSpeed < 20: body.currentUserMoveSpeed=20))
+  # for area in spawn_areas(gridmap, "goal"):
+  #   area.body_entered.connect(func(body): if body is Player: body.win(area))
+  # for area in spawn_areas(gridmap, "spiky ball"):
+  #   add_trigger(area, func(body): if body is Player: body.onTick.append(body.die))
+  # # for area in spawn_areas(gridmap, "speed zone"):
+  # #   add_trigger(area, func(body): if body is Player: body.onTick.append(func(): if body.currentUserMoveSpeed < 20: body.currentUserMoveSpeed=20))
 
-  var cp_areas := spawn_areas(gridmap, "cp")
-  var cp_panes := replace_with_nodes(gridmap, "cp")
-  for area in cp_areas:
-    var pane: MeshInstance3D = cp_panes[area.get_meta("cell")]
-    checkpoints.append({"area": area, "pane": pane})
-    area.body_entered.connect(func(body): if body is Player: collect_checkpoint(pane))
+  # var cp_areas := spawn_areas(gridmap, "cp")
+  # var cp_panes := replace_with_nodes(gridmap, "cp")
+  # for area in cp_areas:
+  #   var pane: MeshInstance3D = cp_panes[area.get_meta("cell")]
+  #   checkpoints.append({"area": area, "pane": pane})
+  #   area.body_entered.connect(func(body): if body is Player: collect_checkpoint(pane))
 
   var sky_mat := ProceduralSkyMaterial.new()
   sky_mat.sky_top_color = Color("#3d6fb5")
