@@ -13,19 +13,19 @@ func add_trigger(area: Area3D, on_enter: Callable) -> void:
   area.body_entered.connect(on_enter)
 
 func _ready() -> void:
-  # for area in spawn_areas(gridmap, "goal"):
-  #   area.body_entered.connect(func(body): if body is Player: body.win(area))
-  # for area in spawn_areas(gridmap, "spiky ball"):
-  #   add_trigger(area, func(body): if body is Player: body.onTick.append(body.die))
-  # # for area in spawn_areas(gridmap, "speed zone"):
-  # #   add_trigger(area, func(body): if body is Player: body.onTick.append(func(): if body.currentUserMoveSpeed < 20: body.currentUserMoveSpeed=20))
+  for area in spawn_areas(gridmap, "goal"):
+    area.body_entered.connect(func(body): if body is Player: body.win(area))
+  for area in spawn_areas(gridmap, "spiky ball"):
+    add_trigger(area, func(body): if body is Player: body.onTick.append(body.die))
+  # for area in spawn_areas(gridmap, "speed zone"):
+  #   add_trigger(area, func(body): if body is Player: body.onTick.append(func(): if body.currentUserMoveSpeed < 20: body.currentUserMoveSpeed=20))
 
-  # var cp_areas := spawn_areas(gridmap, "cp")
-  # var cp_panes := replace_with_nodes(gridmap, "cp")
-  # for area in cp_areas:
-  #   var pane: MeshInstance3D = cp_panes[area.get_meta("cell")]
-  #   checkpoints.append({"area": area, "pane": pane})
-  #   area.body_entered.connect(func(body): if body is Player: collect_checkpoint(pane))
+  var cp_areas := spawn_areas(gridmap, "cp")
+  var cp_panes := replace_with_nodes(gridmap, "cp")
+  for area in cp_areas:
+    var pane: MeshInstance3D = cp_panes[area.get_meta("cell")]
+    checkpoints.append({"area": area, "pane": pane})
+    area.body_entered.connect(func(body): if body is Player: collect_checkpoint(pane))
 
   var sky_mat := ProceduralSkyMaterial.new()
   sky_mat.sky_top_color = Color("#3d6fb5")
@@ -80,12 +80,11 @@ func spawn_areas(grid: MergedGridMap, tile: String) -> Array[Area3D]:
   var rel := _relative_transform(template, scene_root)
 
   var areas: Array[Area3D] = []
-  for cell in grid.get_used_cells_by_item(id):
+  for box in grid.get_boxes_by_item(id):
     var area: Area3D = template.duplicate()
-    area.set_meta("cell", cell) # new line
+    area.set_meta("cell", box.min) # key shared with replace_with_nodes
     grid.add_child(area)
-    var cell_xform := Transform3D(grid.get_cell_item_basis(cell), grid.map_to_local(cell))
-    area.transform = cell_xform * rel
+    area.transform = box.xform * rel # stretched over the whole merged box, like its mesh
     areas.append(area)
 
   scene_root.free()
@@ -98,7 +97,7 @@ func _relative_transform(node: Node3D, root: Node) -> Transform3D:
     x = node.transform * x
     node = node.get_parent()
   return x
-# swaps every cell of a tile for a standalone MeshInstance3D, returns cell -> node
+# swaps every merged box of a tile for a standalone MeshInstance3D, returns box min cell -> node
 func replace_with_nodes(grid: MergedGridMap, tile: String) -> Dictionary:
   var lib := grid.mesh_library
   var id := lib.find_item_by_name(tile)
@@ -107,14 +106,14 @@ func replace_with_nodes(grid: MergedGridMap, tile: String) -> Dictionary:
   var mesh_xform := lib.get_item_mesh_transform(id)
 
   var nodes := {}
-  for cell in grid.get_used_cells_by_item(id):
+  for box in grid.get_boxes_by_item(id):
     var mi := MeshInstance3D.new()
     mi.mesh = mesh
     mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
     grid.add_child(mi)
-    mi.transform = Transform3D(grid.get_cell_item_basis(cell), grid.map_to_local(cell)) * mesh_xform
-    nodes[cell] = mi
-    grid.set_cell_item(cell, GridMap.INVALID_CELL_ITEM)
+    mi.transform = box.xform * mesh_xform
+    nodes[box.min] = mi
+  grid.erase_items(id)
   return nodes
 
 func collect_checkpoint(pane: MeshInstance3D) -> void:

@@ -15,6 +15,7 @@ const INVALID_CELL_ITEM := -1
 var _boxes: Array[MeshInstance3D] = []
 var _body: StaticBody3D # one body for the whole map, one stretched shape per merged box
 var _dirty := false
+var boxes: Array = [] # merged boxes from the last rebuild: {min, size, item, rot, xform}
 
 func _ready() -> void:
   rebuild()
@@ -39,6 +40,17 @@ func set_cell_item(cell: Vector3i, item: int, orientation: int = 0) -> void:
 func map_to_local(cell: Vector3i) -> Vector3:
   return (Vector3(cell) + Vector3(0.5, 0.5, 0.5)) * cell_size
 
+# merged boxes of one item, each with xform = the transform its mesh/collision is stretched by
+func get_boxes_by_item(item: int) -> Array:
+  if _dirty: rebuild()
+  return boxes.filter(func(b: Dictionary) -> bool: return b.item == item)
+
+func erase_items(item: int) -> void:
+  for cell in tiles.keys():
+    if tiles[cell].x == item:
+      tiles.erase(cell)
+  _request_rebuild()
+
 # ---------------------------------------------------------------- rebuild
 
 func _request_rebuild() -> void:
@@ -56,7 +68,8 @@ func rebuild() -> void:
   _body = StaticBody3D.new()
   add_child(_body, false, Node.INTERNAL_MODE_BACK)
 
-  for box in merge_boxes(tiles):
+  boxes = merge_boxes(tiles)
+  for box in boxes:
     var size: Vector3i = box.size
     var rot: int = box.rot
     var local_scale := Vector3(size)
@@ -68,16 +81,24 @@ func rebuild() -> void:
     var mi := MeshInstance3D.new()
     mi.mesh = mesh_library.get_item_mesh(box.item)
     var box_xform := Transform3D(basis, center)
+    box["xform"] = box_xform
     mi.transform = box_xform * mesh_library.get_item_mesh_transform(box.item)
     add_child(mi, false, Node.INTERNAL_MODE_BACK) # internal + no owner: never saved
     _boxes.append(mi)
 
-    # collision is stretched exactly like the mesh: the library's shapes under the same box transform
+    # collision is stretched like the mesh by resizing a real BoxShape3D per merged box
+    # (no node scale, so the physics shape and its debug view are exactly the merged box)
     var shapes := mesh_library.get_item_shapes(box.item) # [Shape3D, Transform3D, Shape3D, Transform3D, ...]
+    var rot_xform := Transform3D(Basis(Vector3.UP, rot * PI / 2.0), center)
     for i in range(0, shapes.size(), 2):
+      var src: BoxShape3D = shapes[i] # tiles that get merged must use box collision
+      var src_xform: Transform3D = shapes[i + 1]
+      assert(src_xform.basis.is_equal_approx(Basis.IDENTITY), "merged tile shape must not be rotated or scaled in the mesh library")
+      var shape := BoxShape3D.new()
+      shape.size = src.size * local_scale
       var cs := CollisionShape3D.new()
-      cs.shape = shapes[i]
-      cs.transform = box_xform * shapes[i + 1]
+      cs.shape = shape
+      cs.transform = rot_xform * Transform3D(Basis.IDENTITY, src_xform.origin * local_scale)
       _body.add_child(cs)
 
 # ---------------------------------------------------------------- merging
@@ -122,5 +143,6 @@ static func _slab_ok(tile_data: Dictionary, used: Dictionary, key: Vector2i, ori
   for y in extent.y:
     for z in extent.z:
       for x in extent.x:
-        if not _free(tile_data, used, key, origin + Vector3i(x, y, z)): return false
+        if not _free(tile_data, used, key, origin + Vector3i(x, y, z)):
+          return false
   return true
