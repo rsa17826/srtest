@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://cbpbinby7p0p4"]
 
-[ext_resource type="Script" uid="uid://dn5warxe1xfuc" path="res://gridmap/_/spiky floor/main.gd" id="1_6pvfw"]
-[ext_resource type="Shader" uid="uid://c4vx6xidc0my8" path="res://shaders/spiky-floor-large.gdshader" id="1_uxe5o"]
+[ext_resource type="Script" uid="uid://dn5warxe1xfuc" path="res://gridmap/_/spiky floor/main.gd" id="1_7m73a"]
+[ext_resource type="Shader" uid="uid://c4vx6xidc0my8" path="res://shaders/spiky-floor-large.gdshader" id="2_jc82d"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_ivw4r"]
 subdivide_width = 32
@@ -10,7 +10,7 @@ center_offset = Vector3(0, 0.5, 0)
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_7uph4"]
 render_priority = 0
-shader = ExtResource("1_uxe5o")
+shader = ExtResource("2_jc82d")
 shader_parameter/base_color = Color(0, 0.14509805, 0.22352941, 1)
 shader_parameter/glow_color = Color(0.03529412, 0, 0.72156864, 1)
 shader_parameter/rim_power = 4.0
@@ -31,7 +31,6 @@ shader_parameter/refine_steps = 5
 size = Vector3(100, 1, 100)
 
 [node name="root" type="Node3D" unique_id=818926986]
-script = ExtResource("1_6pvfw")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1224317292]
 transform = Transform3D(50, 0, 0, 0, 1, 0, 0, 0, 50, 0, 0, 0)
@@ -40,8 +39,11 @@ mesh = SubResource("PlaneMesh_ivw4r")
 surface_material_override/0 = SubResource("ShaderMaterial_7uph4")
 metadata/_edit_lock_ = true
 
-[node name="StaticBody3D2" type="Area3D" parent="." unique_id=734199248]
+[node name="Area3D" type="Area3D" parent="." unique_id=184471766]
+script = ExtResource("1_7m73a")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D2" unique_id=151750376]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D" unique_id=151750376]
 shape = SubResource("BoxShape3D_c2ksa")
 metadata/_edit_lock_ = true
+
+[connection signal="body_entered" from="Area3D" to="Area3D" method="_on_body_entered"]
