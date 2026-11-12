@@ -13,6 +13,7 @@ const INVALID_CELL_ITEM := -1
 @export var tiles := {} # Vector3i -> Vector2i(item, rotation)
 
 var _boxes: Array[MeshInstance3D] = []
+var _body: StaticBody3D # one body for the whole map, one stretched shape per merged box
 var _dirty := false
 
 func _ready() -> void:
@@ -50,6 +51,10 @@ func rebuild() -> void:
   for b in _boxes:
     b.free()
   _boxes.clear()
+  if _body != null:
+    _body.free()
+  _body = StaticBody3D.new()
+  add_child(_body, false, Node.INTERNAL_MODE_BACK)
 
   for box in merge_boxes(tiles):
     var size: Vector3i = box.size
@@ -62,9 +67,18 @@ func rebuild() -> void:
 
     var mi := MeshInstance3D.new()
     mi.mesh = mesh_library.get_item_mesh(box.item)
-    mi.transform = Transform3D(basis, center) * mesh_library.get_item_mesh_transform(box.item)
+    var box_xform := Transform3D(basis, center)
+    mi.transform = box_xform * mesh_library.get_item_mesh_transform(box.item)
     add_child(mi, false, Node.INTERNAL_MODE_BACK) # internal + no owner: never saved
     _boxes.append(mi)
+
+    # collision is stretched exactly like the mesh: the library's shapes under the same box transform
+    var shapes := mesh_library.get_item_shapes(box.item) # [Shape3D, Transform3D, Shape3D, Transform3D, ...]
+    for i in range(0, shapes.size(), 2):
+      var cs := CollisionShape3D.new()
+      cs.shape = shapes[i]
+      cs.transform = box_xform * shapes[i + 1]
+      _body.add_child(cs)
 
 # ---------------------------------------------------------------- merging
 
@@ -108,6 +122,5 @@ static func _slab_ok(tile_data: Dictionary, used: Dictionary, key: Vector2i, ori
   for y in extent.y:
     for z in extent.z:
       for x in extent.x:
-        if not _free(tile_data, used, key, origin + Vector3i(x, y, z)):
-          return false
+        if not _free(tile_data, used, key, origin + Vector3i(x, y, z)): return false
   return true
