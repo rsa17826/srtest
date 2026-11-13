@@ -19,6 +19,9 @@ const INVALID_CELL_ITEM := -1
 @export var tiled_draw_bottom := false # bottom faces are rarely seen, so skipped by default
 @export var tiled_chunk_size := 8 # cells per chunk side; chunks are frustum culled separately
 @export var tiled_visibility_range := 0.0 # chunks hidden beyond this distance; 0 = never
+@export var tiled_lod_distance := 0.0 # beyond this distance chunks switch to tiled_far_subdivisions; 0 = no lod
+@export var tiled_far_subdivisions := 7
+@export var tiled_cast_shadows := false # spiky geometry is vertex heavy, every shadow pass redraws it
 
 var _boxes: Array[Node3D] = []
 var _body: StaticBody3D # one body for the whole map, one stretched shape per merged box
@@ -124,7 +127,7 @@ func rebuild() -> void:
       _body.add_child(cs)
 
   # tiled items: one subdivided plane instance per exposed cell face, split into spatial chunks
-  var planes := {} # item -> PlaneMesh
+  var planes := {} # Vector2i(item, subdivisions) -> PlaneMesh
   var chunks := {} # Vector4i(item, chunk x, y, z) -> Array of Transform3D
   for cell: Vector3i in tiles:
     var item: int = tiles[cell].x
@@ -139,30 +142,44 @@ func rebuild() -> void:
       if d == Vector3i.DOWN and not tiled_draw_bottom: continue
       var face := Transform3D(_face_basis(d) * Basis.from_scale(_face_scale(d)), Vector3(d) * cell_size * 0.5)
       chunks[key].append(cell_xform * face)
-    if not planes.has(item):
-      var plane := PlaneMesh.new()
-      plane.size = Vector2.ONE
-      plane.subdivide_width = tiled_subdivisions
-      plane.subdivide_depth = tiled_subdivisions
-      var mat := mesh_library.get_item_mesh(item).surface_get_material(0)
-      assert(mat != null, "tiled item needs a material on surface 0 of its mesh")
-      plane.material = mat
-      planes[item] = plane
+
+  # [subdivisions, visible from, visible until] (0 = no limit)
+  var lods := [[tiled_subdivisions, 0.0, tiled_visibility_range]]
+  if tiled_lod_distance > 0.0:
+    lods = [
+      [tiled_subdivisions, 0.0, tiled_lod_distance],
+      [tiled_far_subdivisions, tiled_lod_distance, tiled_visibility_range],
+    ]
 
   for key: Vector4i in chunks:
     var xforms: Array = chunks[key]
     if xforms.is_empty(): continue
-    var mm := MultiMesh.new()
-    mm.transform_format = MultiMesh.TRANSFORM_3D
-    mm.mesh = planes[key.x]
-    mm.instance_count = xforms.size()
-    for i in xforms.size():
-      mm.set_instance_transform(i, xforms[i])
-    var mmi := MultiMeshInstance3D.new()
-    mmi.multimesh = mm
-    mmi.visibility_range_end = tiled_visibility_range
-    add_child(mmi, false, Node.INTERNAL_MODE_BACK)
-    _boxes.append(mmi)
+    for lod in lods:
+      var plane_key := Vector2i(key.x, lod[0])
+      if not planes.has(plane_key):
+        var plane := PlaneMesh.new()
+        plane.size = Vector2.ONE
+        plane.subdivide_width = lod[0]
+        plane.subdivide_depth = lod[0]
+        var mat := mesh_library.get_item_mesh(key.x).surface_get_material(0)
+        assert(mat != null, "tiled item needs a material on surface 0 of its mesh")
+        plane.material = mat
+        planes[plane_key] = plane
+
+      var mm := MultiMesh.new()
+      mm.transform_format = MultiMesh.TRANSFORM_3D
+      mm.mesh = planes[plane_key]
+      mm.instance_count = xforms.size()
+      for i in xforms.size():
+        mm.set_instance_transform(i, xforms[i])
+      var mmi := MultiMeshInstance3D.new()
+      mmi.multimesh = mm
+      mmi.visibility_range_begin = lod[1]
+      mmi.visibility_range_end = lod[2]
+      if not tiled_cast_shadows:
+        mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+      add_child(mmi, false, Node.INTERNAL_MODE_BACK)
+      _boxes.append(mmi)
 
 # a PlaneMesh faces +Y; these orient it onto each cube face
 const FACE_DIRS := [Vector3i.RIGHT, Vector3i.LEFT, Vector3i.UP, Vector3i.DOWN, Vector3i.BACK, Vector3i.FORWARD]
