@@ -80,21 +80,7 @@ func _input(event: InputEvent) -> void:
 
 func _process(delta: float) -> void:
   if not is_flying or not custom_cam: return
-
-  # 1. ESTIMATE INITIAL ZOOM FROM SELECTED NODE
-  var estimated_zoom_distance := 15.0 # Baseline fallback distance
-  var selection = get_editor_interface().get_selection().get_selected_nodes()
-
-  if not selection.is_empty() and selection[0] is Node3D:
-    # Measure exact distance to what you are currently editing
-    estimated_zoom_distance = custom_cam.global_position.distance_to(selection[0].global_position)
-
-  # Prevent division errors or hyperspeed if inside an object
-  estimated_zoom_distance = max(0.5, estimated_zoom_distance)
-
-  # 2. COMBINE BASELINE ZOOM DISTANCE WITH THE USER'S THROTTLE
-  # Closer = automatically moves slower; Farther = automatically moves faster.
-  var final_speed = move_speed * (estimated_zoom_distance * 0.08) * flight_speed_multiplier
+  var final_speed = move_speed * flight_speed_multiplier
   final_speed = clamp(final_speed, 0.5, 250.0) # Safe guard boundary
 
   # 3. RUN FLIGHT LOGIC

@@ -1,3 +1,4 @@
+@tool
 extends Node3D
 class_name Level
 
@@ -13,6 +14,13 @@ func add_trigger(area: Area3D, on_enter: Callable) -> void:
   area.body_entered.connect(on_enter)
 
 func _ready() -> void:
+  if Engine.is_editor_hint():
+    gridmap.tiled_subdivisions = 15
+    gridmap.tiled_visibility_range = 100
+    gridmap.tiled_lod_distance = 50
+    gridmap.tiled_far_subdivisions = 0
+    gridmap.tiled_items = PackedStringArray(["spiky floor", "spiky box"])
+    return
   for area in spawn_areas(gridmap, "goal"):
     area.body_entered.connect(func(body): if body is Player: body.win(area))
   for area in spawn_areas(gridmap, "spiky ball"):
