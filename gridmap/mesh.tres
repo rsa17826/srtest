@@ -215,6 +215,32 @@ shadow_mesh = SubResource("ArrayMesh_q4l8y")
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_6gw7l"]
 
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_4hd4c"]
+render_priority = 0
+shader = ExtResource("1_4oiww")
+shader_parameter/base_color = Color(0.04703147, 4.0911138e-07, 0.3258339, 1)
+shader_parameter/line_color = Color(0.2, 0.8, 1, 1)
+shader_parameter/cell_size = 1.0
+shader_parameter/line_width = 0.1270000060325
+shader_parameter/emission_strength = 0.12
+shader_parameter/move_color = Color(0, 0, 0, 1)
+shader_parameter/move_dir = Vector2(0, 1)
+shader_parameter/move_speed = 0.5
+shader_parameter/move_spacing = 0.5
+shader_parameter/move_width = 0.015
+shader_parameter/move_emission = 2.0
+shader_parameter/spike_size = 0.2
+shader_parameter/spike_height = 0.12
+shader_parameter/spike_width = 0.25
+shader_parameter/spike_speed = 1.0
+shader_parameter/spike_pulse = 0.5
+shader_parameter/spike_randomness = 0.5
+
+[sub_resource type="BoxMesh" id="BoxMesh_a3bc7"]
+material = SubResource("ShaderMaterial_4hd4c")
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_6c6p3"]
+
 [resource]
 item/0/name = "basic"
 item/0/mesh = SubResource("BoxMesh_4oiww")
@@ -243,3 +269,7 @@ item/6/mesh = SubResource("ArrayMesh_vnf47")
 item/6/mesh_transform = Transform3D(-5.6824803e-09, 0.13, 0, -0.13, -5.6824803e-09, 0, 0, 0, 0.13, -0.33, 0, 0)
 item/6/shapes = [SubResource("BoxShape3D_6gw7l"), Transform3D(1, 3.5527137e-15, 0, -3.5527137e-15, 1, 0, 0, 0, 1, 2.9802322e-08, -8.881784e-16, 0)]
 item/6/navigation_mesh_transform = Transform3D(-5.6824803e-09, 0.13, 0, -0.13, -5.6824803e-09, 0, 0, 0, 0.13, -0.33, 0, 0)
+item/7/name = "door"
+item/7/mesh = SubResource("BoxMesh_a3bc7")
+item/7/mesh_cast_shadow = 0
+item/7/shapes = [SubResource("BoxShape3D_6c6p3"), Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)]

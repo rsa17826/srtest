@@ -1,0 +1,42 @@
+[gd_scene format=3 uid="uid://cevyoqvl3wjho"]
+
+[ext_resource type="Shader" uid="uid://cauwhkcmtwcy6" path="res://shaders/main.gdshader" id="1_5pi1v"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_4hd4c"]
+render_priority = 0
+shader = ExtResource("1_5pi1v")
+shader_parameter/base_color = Color(0.04703147, 4.0911138e-07, 0.3258339, 1)
+shader_parameter/line_color = Color(0.2, 0.8, 1, 1)
+shader_parameter/cell_size = 1.0
+shader_parameter/line_width = 0.1270000060325
+shader_parameter/emission_strength = 0.12
+shader_parameter/move_color = Color(0, 0, 0, 1)
+shader_parameter/move_dir = Vector2(0, 1)
+shader_parameter/move_speed = 0.5
+shader_parameter/move_spacing = 0.5
+shader_parameter/move_width = 0.015
+shader_parameter/move_emission = 2.0
+shader_parameter/spike_size = 0.2
+shader_parameter/spike_height = 0.12
+shader_parameter/spike_width = 0.25
+shader_parameter/spike_speed = 1.0
+shader_parameter/spike_pulse = 0.5
+shader_parameter/spike_randomness = 0.5
+
+[sub_resource type="BoxMesh" id="BoxMesh_misnd"]
+material = SubResource("ShaderMaterial_4hd4c")
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_6c6p3"]
+
+[node name="root" type="Node3D" unique_id=818926986]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1224317292]
+cast_shadow = 0
+mesh = SubResource("BoxMesh_misnd")
+metadata/_edit_lock_ = true
+
+[node name="StaticBody3D" type="StaticBody3D" parent="MeshInstance3D" unique_id=309447232]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshInstance3D/StaticBody3D" unique_id=151750376]
+shape = SubResource("BoxShape3D_6c6p3")
+metadata/_edit_lock_ = true
