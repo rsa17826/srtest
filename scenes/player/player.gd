@@ -444,14 +444,14 @@ func win(goal: Area3D) -> void:
   win_mat = mesh.surface_get_material(0).duplicate() # private copy, other goals are untouched
   win_fade = win_mat.get_shader_parameter("top_fade")
 
-  win_fx = MeshInstance3D.new()
-  win_fx.mesh = mesh
-  win_fx.material_override = win_mat
-  win_fx.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-  grid.add_child(win_fx)
-  win_fx.transform = Transform3D(grid.get_cell_item_basis(win_cell), grid.map_to_local(win_cell)) \
-      * lib.get_item_mesh_transform(win_item)
-  grid.set_cell_item(win_cell, GridMap.INVALID_CELL_ITEM) # hide the shared cell, the copy replaces it
+  #win_fx = MeshInstance3D.new()
+  #win_fx.mesh = mesh
+  #win_fx.material_override = win_mat
+  #win_fx.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+  #grid.add_child(win_fx)
+  #win_fx.transform = Transform3D(grid.get_cell_item_basis(win_cell), grid.map_to_local(win_cell)) \
+  #    * lib.get_item_mesh_transform(win_item)
+  #grid.set_cell_item(win_cell, GridMap.INVALID_CELL_ITEM) # hide the shared cell, the copy replaces it
 
 func end_win() -> void:
   winning = false

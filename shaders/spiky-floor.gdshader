@@ -55,6 +55,8 @@ vec3 field(vec2 uv) {
 void vertex() {
   vec3 wp = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
   vec3 wn = normalize((MODEL_MATRIX * vec4(NORMAL, 0.0)).xyz);
+  // how much the model matrix stretches a unit local normal (merged boxes are scaled up)
+  float stretch = length((MODEL_MATRIX * vec4(NORMAL, 0.0)).xyz);
   vec3 an = abs(wn);
 
   vec3 a;
@@ -72,8 +74,11 @@ void vertex() {
   vec2 uv = vec2(dot(wp, a), dot(wp, b));
 
   vec3 f = field(uv);
-  VERTEX += NORMAL * f.x;
-  NORMAL = normalize(wn - f.y * a - f.z * b);
+  // f.x is in world units: divide by the stretch so spikes keep their height on merged boxes
+  VERTEX += NORMAL * (f.x / stretch);
+  // the field gradient lives in world space; bring the normal back to model space
+  vec3 world_n = normalize(wn - f.y * a - f.z * b);
+  NORMAL = normalize(transpose(mat3(MODEL_MATRIX)) * world_n);
   tip = clamp(f.x / spike_height, 0.0, 1.0);
 }
 
