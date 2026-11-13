@@ -331,7 +331,7 @@ func step(delta: float, input_dir: Vector2) -> void:
         clear_grenades()
       spawnGrenade()
   if pending_grenade_explode:
-    if active_grenade != null and active_grenade.stopTicking:
+    if active_grenade != null: # and active_grenade.stopTicking:
       pending_grenade_explode = false
       tick_grenades(delta, true)
   tick_grenades(delta, false)
