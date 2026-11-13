@@ -5,6 +5,8 @@ extends EditorPlugin
 #  - ray is marched through the GridMap cells: clicking a block face places next to it
 #  - if the ray hits no block it lands on a work plane (the "layer"), so no scrolling floors
 #  - ghost tile + cell outline + fading grid show exactly what will be placed and where
+#  - Ctrl+drag selects a region, Ctrl+scroll changes its height, releasing Ctrl fills it
+#    (releasing Ctrl while holding Shift erases the region instead)
 
 const DEBUG := false # true = print why a click was ignored
 const MAX_RAY_CELLS := 256
@@ -67,6 +69,14 @@ var painting := false
 var click_held := false # a left click we consumed is still down
 var stroke := {} # cell -> [old_item, old_orientation] for the current drag
 var last_mouse := Vector2.ZERO
+
+# region (Ctrl+drag) state
+var region_active := false # Ctrl is held and a region is being built
+var region_dragging := false # left mouse is still down, footprint follows the cursor
+var region_start := Vector3i.ZERO # first corner, y is the base layer
+var region_end := Vector3i.ZERO # opposite footprint corner (y == region_start.y)
+var region_h := 0 # extra layers above (+) or below (-) the base layer
+var region_erasing := false # Shift currently held
 
 func _enter_tree() -> void:
   set_process_input(true)
@@ -144,6 +154,8 @@ func _detach() -> void:
   has_target = false
   painting = false
   click_held = false
+  region_active = false
+  region_dragging = false
   stroke.clear()
 
 func _build_panel() -> void:
@@ -159,7 +171,7 @@ func _build_panel() -> void:
   panel.add_child(enabled_check)
 
   var help := Label.new()
-  help.text = "LMB place    Shift+LMB erase\n[ ] tile    T rotate\nPgUp/PgDn layer"
+  help.text = "LMB place    Shift+LMB erase\n[ ] tile    T rotate\nPgUp/PgDn layer\nCtrl+drag region\nCtrl+scroll height\nRelease Ctrl fill\n(+Shift = erase)\nEsc cancel region"
   help.add_theme_font_size_override("font_size", 11)
   help.modulate = Color(1, 1, 1, 0.6)
   panel.add_child(help)
@@ -258,11 +270,14 @@ func _input(event: InputEvent) -> void:
   # a click we consumed must also have its release consumed, even outside the viewport
   if click_held and event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
     click_held = false
+    region_dragging = false # footprint is now fixed; Ctrl+scroll still adjusts height
     if painting:
       painting = false
       _commit_stroke()
     _consume()
     return
+
+  if _region_input(event): return
 
   # note: during _input the main viewport's own mouse position is one event stale,
   # so mouse events use event.position directly
@@ -281,6 +296,10 @@ func _input(event: InputEvent) -> void:
 
   if event is InputEventMouseMotion:
     last_mouse = (event.position - container.global_position) / container.stretch_shrink
+    if region_active:
+      if region_dragging:
+        _update_region_end(camera)
+      return
     if not painting:
       erasing = event.shift_pressed
     _update_target(camera)
@@ -296,6 +315,15 @@ func _input(event: InputEvent) -> void:
     _consume() # always, otherwise the built-in tool places its own block
     _update_target(camera)
     if not has_target: return
+    if event.ctrl_pressed:
+      region_active = true
+      region_dragging = true
+      region_start = target_cell
+      region_end = target_cell
+      region_h = 0
+      region_erasing = event.shift_pressed
+      _update_visuals()
+      return
     if not erasing and selected_item == MergedGridMap.INVALID_CELL_ITEM:
       push_warning("gridmap_placer: no tile selected in the palette")
       return
@@ -328,6 +356,42 @@ func _input(event: InputEvent) -> void:
     _update_target(camera)
     _consume()
 
+# Events that only matter while a region is being built. Returns true when handled.
+# These must not depend on the cursor being over the viewport (Ctrl can be released anywhere).
+func _region_input(event: InputEvent) -> bool:
+  if not region_active: return false
+
+  if event is InputEventKey:
+    if event.keycode == KEY_CTRL and not event.pressed:
+      region_active = false
+      region_dragging = false
+      erasing = event.shift_pressed
+      _fill_region()
+      has_target = false
+      _update_visuals()
+      return true
+    if event.keycode == KEY_SHIFT:
+      region_erasing = event.pressed
+      _update_visuals()
+      return true
+    if event.keycode == KEY_ESCAPE and event.pressed:
+      region_active = false
+      region_dragging = false
+      has_target = false
+      _update_visuals()
+      _consume()
+      return true
+    return false
+
+  if event is InputEventMouseButton and (event.button_index == MOUSE_BUTTON_WHEEL_UP or event.button_index == MOUSE_BUTTON_WHEEL_DOWN):
+    if event.pressed:
+      region_h += 1 if event.button_index == MOUSE_BUTTON_WHEEL_UP else -1
+      _update_visuals()
+    _consume() # otherwise the editor zooms the camera
+    return true
+
+  return false
+
 func _consume() -> void:
   get_viewport().set_input_as_handled()
 
@@ -351,12 +415,19 @@ func _hovered_viewport(pos: Vector2) -> SubViewport:
 
 # ---------------------------------------------------------------- targeting
 
-# Works in "grid space": GridMap-local coords divided by cell_size, so a cell is a unit cube.
-func _update_target(camera: Camera3D) -> void:
+# Mouse ray in "grid space": GridMap-local coords divided by cell_size, so a cell is a unit cube.
+# Returns [origin, direction].
+func _grid_ray(camera: Camera3D) -> Array:
   var cs := grid.cell_size
   var o := grid.to_local(camera.project_ray_origin(last_mouse)) / cs
   var world_dir := camera.project_ray_normal(last_mouse)
   var d := ((grid.global_transform.basis.inverse() * world_dir) / cs).normalized()
+  return [o, d]
+
+func _update_target(camera: Camera3D) -> void:
+  var ray := _grid_ray(camera)
+  var o: Vector3 = ray[0]
+  var d: Vector3 = ray[1]
 
   # while drag-placing, ignore blocks and stay on the layer the stroke started on
   var plane_locked := painting and not erasing
@@ -388,6 +459,19 @@ func _update_target(camera: Camera3D) -> void:
   else:
     has_target = false
 
+  _update_visuals()
+
+# While dragging a region the footprint follows the cursor on the region's base layer.
+# A ray parallel to the layer (or pointing away from it) leaves the corner where it was.
+func _update_region_end(camera: Camera3D) -> void:
+  var ray := _grid_ray(camera)
+  var o: Vector3 = ray[0]
+  var d: Vector3 = ray[1]
+  if is_zero_approx(d.y): return
+  var t := (float(region_start.y) - o.y) / d.y
+  if t <= 0.0 or t >= MAX_PLANE_DIST: return
+  var p := o + d * t
+  region_end = Vector3i(floori(p.x), region_start.y, floori(p.z))
   _update_visuals()
 
 # Amanatides-Woo voxel traversal. Returns {} or {t, cell, normal}.
@@ -422,6 +506,10 @@ func _march(o: Vector3, d: Vector3) -> Dictionary:
 # ---------------------------------------------------------------- visuals
 
 func _update_visuals() -> void:
+  if region_active:
+    _update_region_visuals()
+    return
+
   var show := enabled_check.button_pressed and has_target
   ghost.visible = show and not erasing and selected_item != MergedGridMap.INVALID_CELL_ITEM
   outline.visible = show
@@ -439,10 +527,46 @@ func _update_visuals() -> void:
     var rot := Basis(Vector3.UP, rotation_index * PI / 2.0)
     ghost.transform = Transform3D(rot, grid.map_to_local(target_cell)) * lib.get_item_mesh_transform(selected_item)
 
+func _update_region_visuals() -> void:
+  ghost.visible = false
+  outline.visible = true
+  plane.visible = true
+
+  var cs := grid.cell_size
+  var b := _region_bounds()
+  var lo: Vector3i = b[0]
+  var hi: Vector3i = b[1]
+  var size := Vector3(hi - lo + Vector3i.ONE)
+  outline.material_override = erase_line_mat if region_erasing else place_line_mat
+  outline.transform = Transform3D(Basis.from_scale(size * cs), Vector3(lo) * cs)
+  plane.transform = Transform3D(Basis.from_scale(cs), (Vector3(region_end) + Vector3(0, 0.01, 0)) * cs)
+  plane_mat.set_shader_parameter("color", ERASE_COLOR if region_erasing else PLACE_COLOR)
+
 # ---------------------------------------------------------------- editing
 
 func _orientation() -> int:
   return rotation_index
+
+# Inclusive cell bounds of the region: [min, max]
+func _region_bounds() -> Array:
+  var y2 := region_start.y + region_h
+  var lo := Vector3i(mini(region_start.x, region_end.x), mini(region_start.y, y2), mini(region_start.z, region_end.z))
+  var hi := Vector3i(maxi(region_start.x, region_end.x), maxi(region_start.y, y2), maxi(region_start.z, region_end.z))
+  return [lo, hi]
+
+# fills (or erases, per `erasing`) the whole region as one undo step
+func _fill_region() -> void:
+  if not erasing and selected_item == MergedGridMap.INVALID_CELL_ITEM:
+    push_warning("gridmap_placer: no tile selected in the palette")
+    return
+  var b := _region_bounds()
+  var lo: Vector3i = b[0]
+  var hi: Vector3i = b[1]
+  for x in range(lo.x, hi.x + 1):
+    for y in range(lo.y, hi.y + 1):
+      for z in range(lo.z, hi.z + 1):
+        _apply(Vector3i(x, y, z))
+  _commit_stroke()
 
 func _apply(cell: Vector3i) -> void:
   var item := MergedGridMap.INVALID_CELL_ITEM if erasing else selected_item
