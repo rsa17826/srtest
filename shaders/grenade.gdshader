@@ -3,7 +3,7 @@ shader_type spatial;
 // fresnel rim, scanlines, row-slide glitch. Adds cracking energy veins, a hot core and an
 // unstable pulsing swell. Drive `fuse` (0 = idle, 1 = about to blow) from the grenade script:
 //   $MeshInstance3D.set_instance_shader_parameter("fuse", t)
-render_mode unshaded, blend_add, cull_back, depth_draw_never, shadows_disabled;
+render_mode unshaded, blend_add, cull_disabled, depth_draw_never, shadows_disabled;
 
 instance uniform float fuse : hint_range(0.0, 1.0) = 0.0;
 
@@ -150,5 +150,5 @@ void fragment() {
   glow *= 1.0 + slides * 0.5;
 
   ALBEDO = glow * f * intensity;
-  ALPHA = 1.0;
+  ALPHA = 1.0-(fuse*.8);
 }

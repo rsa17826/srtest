@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://j402gtffklxx"]
 
 [ext_resource type="Shader" uid="uid://bpnhxqtcofqqf" path="res://shaders/spiky-floor.gdshader" id="1_6pvfw"]
-[ext_resource type="Script" uid="uid://c3iqdgc4k5x48" path="res://gridmap/spiky floor/main.gd" id="2_fnj23"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_ivw4r"]
 subdivide_width = 32
@@ -36,7 +35,6 @@ surface_material_override/0 = SubResource("ShaderMaterial_7uph4")
 metadata/_edit_lock_ = true
 
 [node name="StaticBody3D" type="StaticBody3D" parent="MeshInstance3D" unique_id=309447232]
-script = ExtResource("2_fnj23")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="MeshInstance3D/StaticBody3D" unique_id=151750376]
 shape = SubResource("BoxShape3D_c2ksa")
