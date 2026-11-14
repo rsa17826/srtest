@@ -3,6 +3,7 @@ extends Node3D
 class_name Level
 
 @export var gridmap: MergedGridMap
+@export var key_particles: GPUParticles3D
 func _init() -> void:
   global.level = self
 var checkpoints: Array = []
@@ -26,6 +27,7 @@ func setup_keys() -> void:
   var areas := spawn_areas(gridmap, "key")
   var nodes := replace_with_nodes(gridmap, "key")
   for i in areas.size():
+    log.pp(areas[i], areas[i].get_children())
     keys.append({"node": nodes[areas[i].get_meta("cell")], "shape": areas[i].get_child(0), "taken": false})
     add_trigger(areas[i], func(body): if body is Player: body.onTick.append(collect_key.bind(i)))
   totalKeys = keys.size()
@@ -35,6 +37,9 @@ func _set_key_taken(i: int, taken: bool) -> void:
   keys[i].taken = taken
   keys[i].node.visible = not taken
   keys[i].shape.disabled = taken
+  if taken:
+    key_particles.global_position = keys[i].node.global_position
+    key_particles.emitting = true
 
 func _sync_key_count() -> void:
   var n := 0

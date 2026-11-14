@@ -59,9 +59,9 @@ size = Vector3(1, 0.5732422, 1)
 transform = Transform3D(-5.6824803e-09, 0.13, 0, -0.13, -5.6824803e-09, 0, 0, 0, 0.13, -0.33, 0, 0)
 mesh = SubResource("ArrayMesh_jkai3")
 
-[node name="StaticBody3D" type="Area3D" parent="MeshInstance3D" unique_id=2012912935]
+[node name="Area3D" type="Area3D" parent="MeshInstance3D" unique_id=2012912935]
 transform = Transform3D(-3.3624147e-07, -7.6923084, 0, 7.6923084, -3.3624147e-07, 0, 0, 0, 7.6923084, -1.1095969e-07, 2.538462, 0)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshInstance3D/StaticBody3D" unique_id=151750376]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshInstance3D/Area3D" unique_id=151750376]
 shape = SubResource("BoxShape3D_6gw7l")
 metadata/_edit_lock_ = true
