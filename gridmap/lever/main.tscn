@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://c8al2pjx0t2ax"]
+
+[ext_resource type="ArrayMesh" uid="uid://bgf1adnu3f601" path="res://lever_combined.res" id="1_qwbgg"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_t2c14"]
+
+[node name="root" type="Node3D" unique_id=818926986]
+
+[node name="LeverCombined" type="MeshInstance3D" parent="." unique_id=1899713826]
+mesh = ExtResource("1_qwbgg")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="LeverCombined" unique_id=309447232]
+transform = Transform3D(0.059500005, 0, 0, 0, 0.059500005, 0, 0, 0, 0.059500005, 0, 0, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="LeverCombined/StaticBody3D" unique_id=151750376]
+transform = Transform3D(0.99999934, 0, 0, 0, 0.99999934, 0, 0, 0, 0.99999934, 0, 0, 0)
+shape = SubResource("BoxShape3D_t2c14")
+metadata/_edit_lock_ = true

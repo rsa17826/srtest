@@ -1,6 +1,6 @@
 [gd_scene format=4 uid="uid://blqkjrcex1f0q"]
 
-[ext_resource type="Shader" uid="uid://dsewdvq6woy6h" path="res://shaders/yellow_key.gdshader" id="2_mpda6"]
+[ext_resource type="Shader" uid="uid://dsewdvq6woy6h" path="res://shaders/shiny.gdshader" id="2_mpda6"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_utu7k"]
 render_priority = 0
