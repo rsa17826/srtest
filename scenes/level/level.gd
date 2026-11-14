@@ -12,7 +12,7 @@ var tweens: Array[Tween] = []
 var base_tiles: Dictionary = {} # gridmap.tiles as the level starts, set at the end of _ready
 # Everything that changes the gridmap during a run, in order. ReplayViewer replays this list to show the
 # walls, doors, levers and keys as they were at any frame:
-# [{"type": "explode", "pos": Vector3, "radius": float} | {"type": "lever", "id": int} | {"type": "key", "id": int}]
+# [{"type": "explode", "pos": Vector3} | {"type": "lever", "id": int} | {"type": "key", "id": int}]
 var events: Array = []
 var totalKeys := 0
 
@@ -52,9 +52,9 @@ func collect_key(i: int) -> void:
 
 # Breaks breakable walls near a grenade explosion. Rebuilds immediately (not deferred) so the new
 # collision exists for the rest of this physics tick, which the resimulation relies on.
-func explode(world_pos: Vector3, radius: float) -> void:
-  events.append({"type": "explode", "pos": world_pos, "radius": radius})
-  var changed := _break_walls(world_pos, radius)
+func explode(world_pos: Vector3) -> void:
+  events.append({"type": "explode", "pos": world_pos})
+  var changed := _break_walls(world_pos)
   var local := gridmap.to_local(world_pos)
   for i in levers.size():
     var closest := local.clamp(levers[i].aabb.position, levers[i].aabb.end)
@@ -116,7 +116,7 @@ func pull_lever(i: int) -> void:
     gridmap.rebuild()
 
 # true if any wall was erased. Does not rebuild.
-func _break_walls(world_pos: Vector3, radius: float) -> bool:
+func _break_walls(world_pos: Vector3) -> bool:
   const BREAKABLE_TILE := "cracked wall"
   var id := gridmap.mesh_library.find_item_by_name(BREAKABLE_TILE)
   assert(id != -1, "no tile named '%s' in the mesh library" % BREAKABLE_TILE)
@@ -125,7 +125,7 @@ func _break_walls(world_pos: Vector3, radius: float) -> bool:
 # applies one recorded event to the tiles, without recording it again or rebuilding
 func _apply_event(e: Dictionary) -> void:
   if e.type == "explode":
-    _break_walls(e.pos, e.radius)
+    _break_walls(e.pos)
   elif e.type == "key":
     _set_key_taken(e.id, true)
   else:

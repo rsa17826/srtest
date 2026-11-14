@@ -10,3 +10,4 @@ make the replay viewer have timestamps on the progress bar showing key moments, 
 make replay viewer have input display
 make ui for modifying input values in replay files
 make speed controls for replay viewer
+make goals red or dim or something when keys not all collected
