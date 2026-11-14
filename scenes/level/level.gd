@@ -19,15 +19,66 @@ var events: Array = []
 # collision exists for the rest of this physics tick, which the resimulation relies on.
 func explode(world_pos: Vector3, radius: float) -> void:
   events.append({"type": "explode", "pos": world_pos, "radius": radius})
-  if _break_walls(world_pos, radius):
+  var changed := _break_walls(world_pos, radius)
+  var local := gridmap.to_local(world_pos)
+  for i in levers.size():
+    var closest := local.clamp(levers[i].aabb.position, levers[i].aabb.end)
+    if closest.distance_to(local) <= LEVER_HIT_RADIUS:
+      changed = _pull(i) or changed
+  if changed:
     gridmap.rebuild()
 
-# A lever opens every door. Runs from Player.onTick (see _ready) so the live game and the resimulation
-# apply it at the same point of a tick.
-func pull_lever() -> void:
-  events.append({"type": "lever"})
+# ---------------------------------------------------------------- levers
+
+const LEVER_COLOR := Color("9c0038") # shader_parameter/color of both surfaces once pulled
+const LEVER_HIT_RADIUS := 2.0 # a grenade exploding this close to a lever pulls it
+# one per lever box: {"aabb": AABB (gridmap space), "mats": [surface 0 / 1 materials, private copies],
+# "orig": [their original color], "lit": bool}
+var levers: Array = []
+
+# swaps the lever tiles for standalone meshes with their own materials (so one lever can change color)
+# and hooks up walking into them. A grenade blast pulls them from explode().
+func setup_levers() -> void:
+  var lib := gridmap.mesh_library
+  var id := lib.find_item_by_name("lever")
+  assert(id != -1, "no tile named 'lever' in the mesh library")
+  var mesh := lib.get_item_mesh(id)
+  assert(mesh.get_surface_count() >= 2, "lever mesh needs surfaces 0 and 1")
+  var boxes := gridmap.get_boxes_by_item(id)
+  var areas := spawn_areas(gridmap, "lever") # same box order as `boxes`
+  var nodes := replace_with_nodes(gridmap, "lever")
+  for i in areas.size():
+    var mi: MeshInstance3D = nodes[areas[i].get_meta("cell")]
+    var mats := []
+    var orig := []
+    for s in 2:
+      var mat: ShaderMaterial = mesh.surface_get_material(s).duplicate()
+      mi.set_surface_override_material(s, mat)
+      mats.append(mat)
+      orig.append(mat.get_shader_parameter("color"))
+    var box: Dictionary = boxes[i]
+    var aabb := AABB(Vector3(box.min) * gridmap.cell_size, Vector3(box.size) * gridmap.cell_size)
+    levers.append({"aabb": aabb, "mats": mats, "orig": orig, "lit": false})
+    add_trigger(areas[i], func(body): if body is Player: body.onTick.append(pull_lever.bind(i)))
+
+func _set_lever_lit(i: int, lit: bool) -> void:
+  levers[i].lit = lit
+  for s in 2:
+    levers[i].mats[s].set_shader_parameter("color", LEVER_COLOR if lit else levers[i].orig[s])
+
+# pulls lever i: records it, opens the doors, colors it. No rebuild. false if it was already pulled.
+func _pull(i: int) -> bool:
+  if levers[i].lit: return false
+  events.append({"type": "lever", "id": i})
   removeDoors()
-  gridmap.rebuild()
+  _set_lever_lit(i, true)
+  return true
+
+# walking into a lever. Runs from Player.onTick so the live game and the resimulation apply it at the
+# same point of a tick.
+func pull_lever(i: int) -> void:
+  if _pull(i):
+    gridmap.rebuild()
 
 # true if any wall was erased. Does not rebuild.
 func _break_walls(world_pos: Vector3, radius: float) -> bool:
@@ -43,10 +94,13 @@ func _apply_event(e: Dictionary) -> void:
   else:
     assert(e.type == "lever", "unknown world event type '%s'" % e.type)
     removeDoors()
+    _set_lever_lit(e.id, true)
 
-# walls and doors as they are after the first `count` events of `list`, starting from the level's tiles
+# walls, doors and levers as they are after the first `count` events of `list`, starting from the level's start
 func set_walls(list: Array, count: int) -> void:
   gridmap.tiles = base_tiles.duplicate()
+  for i in levers.size():
+    _set_lever_lit(i, false)
   for i in count:
     _apply_event(list[i])
   gridmap.rebuild()
@@ -77,8 +131,7 @@ func _ready() -> void:
     return
   for area in spawn_areas(gridmap, "goal"):
     area.body_entered.connect(func(body): if body is Player: body.win(area))
-  for area in spawn_areas(gridmap, "lever"):
-    add_trigger(area, func(body): if body is Player: body.onTick.append(pull_lever))
+  setup_levers()
   # for area in spawn_areas(gridmap, "cracked wall"):
   #   add_trigger(area, func(body): if body is Player: body.onTick.append(body.die))
   for area in spawn_areas(gridmap, "spiky ball"):
