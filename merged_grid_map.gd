@@ -117,7 +117,7 @@ func rebuild() -> void:
     var center := (Vector3(box.min) + Vector3(size) * 0.5) * cell_size
 
     var box_xform := Transform3D(basis, center)
-    box["xform"] = box_xform
+    box.xform = box_xform
     if not tiled_ids.has(box.item):
       var mi := MeshInstance3D.new()
       mi.mesh = mesh_library.get_item_mesh(box.item)
@@ -255,6 +255,5 @@ static func _slab_ok(tile_data: Dictionary, used: Dictionary, key: Vector2i, ori
   for y in extent.y:
     for z in extent.z:
       for x in extent.x:
-        if not _free(tile_data, used, key, origin + Vector3i(x, y, z)):
-          return false
+        if not _free(tile_data, used, key, origin + Vector3i(x, y, z)): return false
   return true

@@ -10,9 +10,7 @@
 mesh = ExtResource("1_qwbgg")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="LeverCombined" unique_id=309447232]
-transform = Transform3D(0.059500005, 0, 0, 0, 0.059500005, 0, 0, 0, 0.059500005, 0, 0, 0)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="LeverCombined/StaticBody3D" unique_id=151750376]
-transform = Transform3D(0.99999934, 0, 0, 0, 0.99999934, 0, 0, 0, 0.99999934, 0, 0, 0)
 shape = SubResource("BoxShape3D_t2c14")
 metadata/_edit_lock_ = true

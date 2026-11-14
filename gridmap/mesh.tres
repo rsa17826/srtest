@@ -396,4 +396,4 @@ item/8/mesh = SubResource("BoxMesh_5681r")
 item/8/shapes = [SubResource("BoxShape3D_fqn82"), Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)]
 item/9/name = "lever"
 item/9/mesh = SubResource("ArrayMesh_t2c14")
-item/9/shapes = [SubResource("BoxShape3D_t2c14"), Transform3D(0.059499968, 0, 0, 0, 0.059499968, 0, 0, 0, 0.059499968, 0, 0, 0)]
+item/9/shapes = [SubResource("BoxShape3D_t2c14"), Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)]
