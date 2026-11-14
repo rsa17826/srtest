@@ -46,12 +46,13 @@ var grenade_frames: Array = []
 var ghosts: Array[Grenade] = []
 var saved_cp: Array[float] = []
 
-# breakable walls, as seen by the resimulation. wall_counts[i] = explosions that have happened by the
-# END of frame i; the walls shown are level.set_walls(replay_explosions, count)
-var wall_counts := PackedInt32Array()
-var replay_explosions: Array = []
-var saved_explosions: Array = [] # the live run's explosions, restored on close
-var shown_walls := -1
+# walls and doors (level.events: explosions, lever pulls), as seen by the resimulation.
+# event_counts[i] = events that have happened by the END of frame i; what is shown is
+# level.set_walls(replay_events, count)
+var event_counts := PackedInt32Array()
+var replay_events: Array = []
+var saved_events: Array = [] # the live run's events, restored on close
+var shown_events := -1
 
 # free camera
 var flying := false
@@ -156,7 +157,7 @@ func open() -> void:
     player.abort_recording()
   player.end_win()
 
-  saved_explosions = global.level.explosions.duplicate()
+  saved_events = global.level.events.duplicate()
   saved_pos = player.global_position
   saved_vel = player.velocity
   saved_layer = player.collision_layer
@@ -229,9 +230,9 @@ func close() -> void:
   player.kt = saved_state.kt
   player.trypress.jump = saved_state.trypress
   player.cpPos = saved_state.cp_pos
-  global.level.set_walls(saved_explosions, saved_explosions.size())
-  global.level.explosions = saved_explosions
-  shown_walls = -1
+  global.level.set_walls(saved_events, saved_events.size())
+  global.level.events = saved_events
+  shown_events = -1
   player.current_mode = Player.ReplayMode.NORMAL
   Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
@@ -341,9 +342,9 @@ func _simulate(buf: Array) -> void:
   first_diverge = -1
   player.clear_grenades()
   player.onTick.clear()
-  global.level.explosions.clear()
-  global.level.set_walls([], 0) # the resimulation breaks walls itself, starting from intact ones
-  wall_counts.resize(n)
+  global.level.events.clear()
+  global.level.set_walls([], 0) # the resimulation breaks walls / opens doors itself, from the level's start state
+  event_counts.resize(n)
   grenade_frames.clear()
   grenade_frames.resize(n)
   var lastf = null
@@ -358,7 +359,7 @@ func _simulate(buf: Array) -> void:
       player.global_position = f.start_position
       positions[i] = f.start_position
       grenade_frames[i] = []
-      wall_counts[i] = global.level.explosions.size()
+      event_counts[i] = global.level.events.size()
       continue
     player.cpPos = f.cp_pos # checkpoints are not re-derived; respawns use the recorded one
     player.run_on_tick() # effects queued by triggers on an earlier tick, exactly where the live game runs them
@@ -380,7 +381,7 @@ func _simulate(buf: Array) -> void:
       grenade_frames[i] = [Vector4(g.global_position.x, g.global_position.y, g.global_position.z, float(g.ticks) / g.fuse_ticks)]
     else:
       grenade_frames[i] = []
-    wall_counts[i] = global.level.explosions.size()
+    event_counts[i] = global.level.events.size()
     if first_diverge == -1 and player.global_position.distance_to(f.expected_end_position) > 0:
       log.pp(player.global_position.distance_to(f.expected_end_position), i)
       log.pp("on_floor:", player.is_on_floor(), "slide collisions:", player.get_slide_collision_count())
@@ -404,10 +405,10 @@ func _simulate(buf: Array) -> void:
   cam_rots[n] = buf[n - 1].cam_rotation
   player.clear_grenades() # the resimulation's grenades were only needed for their effect on the player
   player.onTick.clear()
-  replay_explosions = global.level.explosions.duplicate()
-  global.level.explosions.clear()
+  replay_events = global.level.events.duplicate()
+  global.level.events.clear()
   global.level.set_walls([], 0)
-  shown_walls = -1
+  shown_events = -1
 
 # ---------------------------------------------------------------- triggers
 
@@ -547,15 +548,16 @@ func _apply_playhead() -> void:
   slider.set_value_no_signal(playhead)
   _show_grenades()
   _apply_checkpoints()
-  _apply_walls()
+  _apply_world()
 
-# same "end of frame j" convention as _show_grenades; only rebuilds when the explosion count changes
-func _apply_walls() -> void:
+# walls and doors for the playhead; same "end of frame j" convention as _show_grenades. Only rebuilds
+# when the number of events so far changes, so scrubbing between events is free.
+func _apply_world() -> void:
   var j := int(roundf(playhead)) - 1
-  var want: int = wall_counts[j] if j >= 0 else 0
-  if want == shown_walls: return
-  global.level.set_walls(replay_explosions, want)
-  shown_walls = want
+  var want: int = event_counts[j] if j >= 0 else 0
+  if want == shown_events: return
+  global.level.set_walls(replay_events, want)
+  shown_events = want
 
 func _update_info() -> void:
   if not compiled:

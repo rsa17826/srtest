@@ -10,14 +10,24 @@ var triggers: Array = [] # [{"area": Area3D, "on_enter": Callable}], used by Rep
 var tweens: Array[Tween] = []
 
 var base_tiles: Dictionary = {} # gridmap.tiles as the level starts, set at the end of _ready
-var explosions: Array = [] # [{"pos": Vector3, "radius": float}] in order, for the current run
+# Everything that changes the gridmap during a run, in order. ReplayViewer replays this list to show the
+# walls and doors as they were at any frame:
+# [{"type": "explode", "pos": Vector3, "radius": float} | {"type": "lever"}]
+var events: Array = []
 
 # Breaks breakable walls near a grenade explosion. Rebuilds immediately (not deferred) so the new
 # collision exists for the rest of this physics tick, which the resimulation relies on.
 func explode(world_pos: Vector3, radius: float) -> void:
-  explosions.append({"pos": world_pos, "radius": radius})
+  events.append({"type": "explode", "pos": world_pos, "radius": radius})
   if _break_walls(world_pos, radius):
     gridmap.rebuild()
+
+# A lever opens every door. Runs from Player.onTick (see _ready) so the live game and the resimulation
+# apply it at the same point of a tick.
+func pull_lever() -> void:
+  events.append({"type": "lever"})
+  removeDoors()
+  gridmap.rebuild()
 
 # true if any wall was erased. Does not rebuild.
 func _break_walls(world_pos: Vector3, radius: float) -> bool:
@@ -26,22 +36,31 @@ func _break_walls(world_pos: Vector3, radius: float) -> bool:
   assert(id != -1, "no tile named '%s' in the mesh library" % BREAKABLE_TILE)
   return gridmap.erase_item_in_radius(id, gridmap.to_local(world_pos), 2)
 
-# walls as they are after the first `count` explosions of `list`
+# applies one recorded event to the tiles, without recording it again or rebuilding
+func _apply_event(e: Dictionary) -> void:
+  if e.type == "explode":
+    _break_walls(e.pos, e.radius)
+  else:
+    assert(e.type == "lever", "unknown world event type '%s'" % e.type)
+    removeDoors()
+
+# walls and doors as they are after the first `count` events of `list`, starting from the level's tiles
 func set_walls(list: Array, count: int) -> void:
+  gridmap.tiles = base_tiles.duplicate()
   for i in count:
-    _break_walls(list[i].pos, list[i].radius)
+    _apply_event(list[i])
+  gridmap.rebuild()
 
 func removeDoors() -> void:
-  log.pp("asdasdasd")
   var id := gridmap.mesh_library.find_item_by_name("door")
   for cell in gridmap.tiles.keys():
     if gridmap.tiles[cell].x == id:
       gridmap.tiles.erase(cell)
 
-# restores every broken wall (full restart). Before any explosion there is nothing to restore.
+# restores every broken wall and door (full restart). With no events nothing has changed.
 func reset_walls() -> void:
-  if explosions.is_empty(): return
-  explosions.clear()
+  if events.is_empty(): return
+  events.clear()
   set_walls([], 0)
 
 func add_trigger(area: Area3D, on_enter: Callable) -> void:
@@ -59,10 +78,7 @@ func _ready() -> void:
   for area in spawn_areas(gridmap, "goal"):
     area.body_entered.connect(func(body): if body is Player: body.win(area))
   for area in spawn_areas(gridmap, "lever"):
-    area.body_entered.connect(func(body): if body is Player:
-      removeDoors()
-      gridmap.rebuild()
-      )
+    add_trigger(area, func(body): if body is Player: body.onTick.append(pull_lever))
   # for area in spawn_areas(gridmap, "cracked wall"):
   #   add_trigger(area, func(body): if body is Player: body.onTick.append(body.die))
   for area in spawn_areas(gridmap, "spiky ball"):

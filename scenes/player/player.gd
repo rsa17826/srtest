@@ -139,9 +139,7 @@ func fullReset():
   for cp in global.level.checkpoints:
     cp.pane.remove_meta("collected")
     cp.pane.set_instance_shader_parameter("collected", 0)
-  global.level.gridmap.tiles = global.level.base_tiles.duplicate()
   global.level.reset_walls()
-  global.level.gridmap.rebuild()
   abort_recording()
 
 func _unhandled_input(event):
