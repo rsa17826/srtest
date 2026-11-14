@@ -69,19 +69,34 @@ func erase_items(item: int) -> void:
       tiles.erase(cell)
   _request_rebuild()
 
-# Erases every cell of `item` whose cube touches the sphere (center in this node's local space).
-# Does NOT rebuild: the caller calls rebuild() once after all its erasing. Returns true if anything was erased.
-func erase_item_in_radius(item: int, center: Vector3, radius: float) -> bool:
-  var half := cell_size * 0.5
-  var erased := false
+# Turns every cell of `item` into its own node (a mesh plus collision on one StaticBody3D), so single cells
+# can be hidden and have their collision disabled later without rebuilding the map. These are one cube per
+# cell, not merged / stretched boxes. The cells are erased from `tiles`; call rebuild() once afterwards.
+# Returns cell -> {"mesh": MeshInstance3D, "shapes": Array[CollisionShape3D]}.
+func detach_cells(item: int) -> Dictionary:
+  var out := {}
+  var mesh := mesh_library.get_item_mesh(item)
+  var mesh_xform := mesh_library.get_item_mesh_transform(item)
+  var shapes := mesh_library.get_item_shapes(item) # [Shape3D, Transform3D, Shape3D, Transform3D, ...]
   for cell in tiles.keys():
     if tiles[cell].x != item: continue
-    var c := map_to_local(cell)
-    var closest := c + (center - c).clamp(-half, half)
-    if closest.distance_to(center) <= radius:
-      tiles.erase(cell)
-      erased = true
-  return erased
+    var body := StaticBody3D.new()
+    body.transform = Transform3D(Basis(Vector3.UP, tiles[cell].y * PI / 2.0), map_to_local(cell))
+    var mi := MeshInstance3D.new()
+    mi.mesh = mesh
+    mi.transform = mesh_xform
+    body.add_child(mi)
+    var cshapes: Array[CollisionShape3D] = []
+    for i in range(0, shapes.size(), 2):
+      var cs := CollisionShape3D.new()
+      cs.shape = shapes[i]
+      cs.transform = shapes[i + 1]
+      body.add_child(cs)
+      cshapes.append(cs)
+    add_child(body)
+    out[cell] = {"mesh": mi, "shapes": cshapes}
+  erase_items(item)
+  return out
 
 # ---------------------------------------------------------------- rebuild
 
@@ -117,7 +132,7 @@ func rebuild() -> void:
     var center := (Vector3(box.min) + Vector3(size) * 0.5) * cell_size
 
     var box_xform := Transform3D(basis, center)
-    box.xform = box_xform
+    box["xform"] = box_xform
     if not tiled_ids.has(box.item):
       var mi := MeshInstance3D.new()
       mi.mesh = mesh_library.get_item_mesh(box.item)
@@ -255,5 +270,6 @@ static func _slab_ok(tile_data: Dictionary, used: Dictionary, key: Vector2i, ori
   for y in extent.y:
     for z in extent.z:
       for x in extent.x:
-        if not _free(tile_data, used, key, origin + Vector3i(x, y, z)): return false
+        if not _free(tile_data, used, key, origin + Vector3i(x, y, z)):
+          return false
   return true

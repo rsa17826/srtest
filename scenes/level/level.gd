@@ -54,18 +54,46 @@ func collect_key(i: int) -> void:
   _set_key_taken(i, true)
   _sync_key_count()
 
-# Breaks breakable walls near a grenade explosion. Rebuilds immediately (not deferred) so the new
-# collision exists for the rest of this physics tick, which the resimulation relies on.
+# Breaks breakable walls near a grenade explosion and pulls levers it hits. Nothing is rebuilt: walls are
+# hidden and their collision disabled on the spot, so it takes effect for the rest of this physics tick
+# (which the resimulation relies on) and costs next to nothing.
 func explode(world_pos: Vector3) -> void:
   events.append({"type": "explode", "pos": world_pos})
-  var changed := _break_walls(world_pos)
+  _break_walls(world_pos)
   var local := gridmap.to_local(world_pos)
   for i in levers.size():
     var closest := local.clamp(levers[i].aabb.position, levers[i].aabb.end)
     if closest.distance_to(local) <= LEVER_HIT_RADIUS:
-      changed = _pull(i) or changed
-  if changed:
-    gridmap.rebuild()
+      _pull(i)
+
+# ---------------------------------------------------------------- breakable walls and doors
+
+const WALL_BREAK_RADIUS := 2.0 # cracked wall cells touching this sphere around an explosion break
+
+# cell -> {"mesh": MeshInstance3D, "shapes": Array[CollisionShape3D]}, one node per cell (see detach_cells)
+var walls: Dictionary = {}
+var doors: Dictionary = {}
+var removed: Dictionary = {} # cell -> its entry, for every wall / door cell currently removed
+
+func _item(tile: String) -> int:
+  var id := gridmap.mesh_library.find_item_by_name(tile)
+  assert(id != -1, "no tile named '%s' in the mesh library" % tile)
+  return id
+
+# makes every cracked wall and door cell its own node, so removing one never rebuilds the gridmap
+func setup_breakables() -> void:
+  walls = gridmap.detach_cells(_item("cracked wall"))
+  doors = gridmap.detach_cells(_item("door"))
+
+# removed = hidden with its collision off
+func _set_removed(cell: Vector3i, entry: Dictionary, is_removed: bool) -> void:
+  entry.mesh.visible = not is_removed
+  for cs in entry.shapes:
+    cs.disabled = is_removed
+  if is_removed:
+    removed[cell] = entry
+  else:
+    removed.erase(cell)
 
 # ---------------------------------------------------------------- levers
 
@@ -105,7 +133,7 @@ func _set_lever_lit(i: int, lit: bool) -> void:
   for s in 2:
     levers[i].mats[s].set_shader_parameter("color", LEVER_COLOR if lit else levers[i].orig[s])
 
-# pulls lever i: records it, opens the doors, colors it. No rebuild. false if it was already pulled.
+# pulls lever i: records it, opens the doors, colors it. false if it was already pulled.
 func _pull(i: int) -> bool:
   if levers[i].lit: return false
   events.append({"type": "lever", "id": i})
@@ -116,17 +144,21 @@ func _pull(i: int) -> bool:
 # walking into a lever. Runs from Player.onTick so the live game and the resimulation apply it at the
 # same point of a tick.
 func pull_lever(i: int) -> void:
-  if _pull(i):
-    gridmap.rebuild()
+  _pull(i)
 
-# true if any wall was erased. Does not rebuild.
-func _break_walls(world_pos: Vector3) -> bool:
-  const BREAKABLE_TILE := "cracked wall"
-  var id := gridmap.mesh_library.find_item_by_name(BREAKABLE_TILE)
-  assert(id != -1, "no tile named '%s' in the mesh library" % BREAKABLE_TILE)
-  return gridmap.erase_item_in_radius(id, gridmap.to_local(world_pos), 2)
+# removes every cracked wall cell whose cube touches the blast sphere (`radius` is unused, as before:
+# the break radius is WALL_BREAK_RADIUS)
+func _break_walls(world_pos: Vector3) -> void:
+  var center := gridmap.to_local(world_pos)
+  var half := gridmap.cell_size * 0.5
+  for cell in walls:
+    if removed.has(cell): continue
+    var c := gridmap.map_to_local(cell)
+    var closest := c + (center - c).clamp(-half, half)
+    if closest.distance_to(center) <= WALL_BREAK_RADIUS:
+      _set_removed(cell, walls[cell], true)
 
-# applies one recorded event to the tiles, without recording it again or rebuilding
+# applies one recorded event to the world, without recording it again
 func _apply_event(e: Dictionary) -> void:
   if e.type == "explode":
     _break_walls(e.pos)
@@ -140,7 +172,8 @@ func _apply_event(e: Dictionary) -> void:
 # walls, doors, levers and keys as they are after the first `count` events of `list`, starting from the
 # level's start. Also sets player.keysCollected to match.
 func set_walls(list: Array, count: int) -> void:
-  gridmap.tiles = base_tiles.duplicate()
+  for cell in removed.keys(): # a copy, _set_removed edits the dictionary
+    _set_removed(cell, removed[cell], false)
   for i in levers.size():
     _set_lever_lit(i, false)
   for i in keys.size():
@@ -148,13 +181,10 @@ func set_walls(list: Array, count: int) -> void:
   for i in count:
     _apply_event(list[i])
   _sync_key_count()
-  gridmap.rebuild()
 
 func removeDoors() -> void:
-  var id := gridmap.mesh_library.find_item_by_name("door")
-  for cell in gridmap.tiles.keys():
-    if gridmap.tiles[cell].x == id:
-      gridmap.tiles.erase(cell)
+  for cell in doors:
+    _set_removed(cell, doors[cell], true)
 
 # restores every broken wall and door (full restart). With no events nothing has changed.
 func reset_walls() -> void:
@@ -177,6 +207,7 @@ func _ready() -> void:
   for area in spawn_areas(gridmap, "goal"):
     area.body_entered.connect(func(body): if body is Player: if global.player.keysCollected >= totalKeys: body.win(area))
   setup_levers()
+  setup_breakables()
   setup_keys()
 
   for area in spawn_areas(gridmap, "spiky ball"):
