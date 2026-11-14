@@ -27,10 +27,12 @@ var win_fade := 0.0
 var win_cell: Vector3i
 var win_item := GridMap.INVALID_CELL_ITEM
 var win_orient := 0
-var win_spin := 0.0 # extra rotation so far, in turns
-var win_startY := 0.0 # extra rotation so far, in turns
-var win_spin_rate := 0.0 # extra turns per second, ramps up
-var winTimer := 0.0 # extra turns per second, ramps up
+var win_spin := 0.0
+var win_startY := 0.0
+var win_spin_rate := 0.0
+var winTimer := 0.0
+
+var keysCollected := 0
 
 # --- REPLAY SYSTEM VARIABLES ---
 enum ReplayMode {NORMAL, RECORDING, REPLAYING, VIEWING}
@@ -122,6 +124,7 @@ func fullReset():
   end_win()
   clear_grenades()
   tickCount = 0
+  keysCollected = 0
   position = startPos
   pending_restart = false
   pending_grenade_spawn = false

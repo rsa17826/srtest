@@ -132,8 +132,12 @@ func _ready() -> void:
   for area in spawn_areas(gridmap, "goal"):
     area.body_entered.connect(func(body): if body is Player: body.win(area))
   setup_levers()
-  # for area in spawn_areas(gridmap, "cracked wall"):
-  #   add_trigger(area, func(body): if body is Player: body.onTick.append(body.die))
+  for area in spawn_areas(gridmap, "key"):
+    add_trigger(area, func(body): if body is Player:
+      body.keysCollected += 1
+      area.visible=false
+      area.disabled=true
+      )
   for area in spawn_areas(gridmap, "spiky ball"):
     add_trigger(area, func(body): if body is Player: body.onTick.append(body.die))
   # for area in spawn_areas(gridmap, "speed zone"):
