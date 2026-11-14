@@ -27,7 +27,6 @@ func setup_keys() -> void:
   var areas := spawn_areas(gridmap, "key")
   var nodes := replace_with_nodes(gridmap, "key")
   for i in areas.size():
-    log.pp(areas[i], areas[i].get_children())
     keys.append({"node": nodes[areas[i].get_meta("cell")], "shape": areas[i].get_child(0), "taken": false})
     add_trigger(areas[i], func(body): if body is Player: body.onTick.append(collect_key.bind(i)))
   totalKeys = keys.size()
