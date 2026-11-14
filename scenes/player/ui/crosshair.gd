@@ -42,6 +42,9 @@ func _draw() -> void:
     draw_line(a, b, Color(color, 0.18), thickness + 6.0)
     draw_line(a, b, Color(color, 0.5), thickness + 2.0)
     draw_line(a, b, white, thickness)
+  var a := c + Vector2.RIGHT * 4 * gap - (Vector2.DOWN * ((tick_length / 2.0) + (thickness)))
+  var b := c + Vector2.RIGHT * 4 * gap + Vector2.DOWN * tick_length
+  draw_line(a, b, Color(redColor if global.level.leverActive else blueColor, 0.75), thickness)
 
   # centre dot
   draw_circle(c, 3.5, Color(color, 0.3))

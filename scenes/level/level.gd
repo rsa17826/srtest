@@ -6,6 +6,8 @@ class_name Level
 @export var key_particles: GPUParticles3D
 func _init() -> void:
   global.level = self
+var leverActive := false
+
 var checkpoints: Array = []
 var triggers: Array = [] # [{"area": Area3D, "on_enter": Callable}], used by ReplayViewer
 var tweens: Array[Tween] = []
@@ -129,6 +131,7 @@ func setup_levers() -> void:
     add_trigger(areas[i], func(body): if body is Player: body.onTick.append(pull_lever.bind(i)))
 
 func _set_lever_lit(i: int, lit: bool) -> void:
+  leverActive = lit
   levers[i].lit = lit
   for s in 2:
     levers[i].mats[s].set_shader_parameter("color", LEVER_COLOR if lit else levers[i].orig[s])
