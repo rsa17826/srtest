@@ -14,7 +14,7 @@ var base_tiles: Dictionary = {} # gridmap.tiles as the level starts, set at the 
 # walls and doors as they were at any frame:
 # [{"type": "explode", "pos": Vector3, "radius": float} | {"type": "lever"}]
 var events: Array = []
-
+var totalKeys := 0
 # Breaks breakable walls near a grenade explosion. Rebuilds immediately (not deferred) so the new
 # collision exists for the rest of this physics tick, which the resimulation relies on.
 func explode(world_pos: Vector3, radius: float) -> void:
@@ -130,14 +130,17 @@ func _ready() -> void:
     gridmap.tiled_items = PackedStringArray(["spiky floor", "spiky box"])
     return
   for area in spawn_areas(gridmap, "goal"):
-    area.body_entered.connect(func(body): if body is Player: body.win(area))
+    area.body_entered.connect(func(body): if body is Player: if global.player.keysCollected >= totalKeys: body.win(area))
   setup_levers()
   for area in spawn_areas(gridmap, "key"):
+    totalKeys += 1
     add_trigger(area, func(body): if body is Player:
       body.keysCollected += 1
-      area.visible=false
-      area.disabled=true
+      area.get_parent().visible=false
+      area.get_child(0).disabled=true
       )
+  replace_with_nodes(gridmap, "lever")
+
   for area in spawn_areas(gridmap, "spiky ball"):
     add_trigger(area, func(body): if body is Player: body.onTick.append(body.die))
   # for area in spawn_areas(gridmap, "speed zone"):
