@@ -208,11 +208,12 @@ func start_recording():
   log.pp("--- RECORDING STARTED ---")
 
 func stop_recording():
-  current_mode = ReplayMode.NORMAL
-  log.pp("--- RECORDING STOPPED (Frames recorded: ", replay_buffer.size(), ") ---")
-  var path := Replays.save(Replays.current_level_name(), replay_buffer)
-  levelStarted = false
-  log.pp("Saved replay to ", path)
+  if current_mode == ReplayMode.RECORDING:
+    current_mode = ReplayMode.NORMAL
+    log.pp("--- RECORDING STOPPED (Frames recorded: ", replay_buffer.size(), ") ---")
+    var path := Replays.save(Replays.current_level_name(), replay_buffer)
+    levelStarted = false
+    log.pp("Saved replay to ", path)
 
 func abort_recording():
   current_mode = ReplayMode.NORMAL
