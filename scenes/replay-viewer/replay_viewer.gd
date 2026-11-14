@@ -3,8 +3,6 @@ class_name ReplayViewer
 # Add as a CanvasLayer node in the level scene (or add_child it from level.gd).
 # F9 opens / closes it. Needs player.replay_buffer to be filled (record a run first).
 
-@export var toggle_key: Key = KEY_F9
-
 const FLY_SPEED := 16.0
 const TELEPORT_DIST := 3.0 # frame-to-frame jump bigger than this = respawn, don't blend
 
@@ -577,7 +575,7 @@ func _fmt(seconds: float) -> String:
 # ---------------------------------------------------------------- input
 
 func _input(event: InputEvent) -> void:
-  if event is InputEventKey and event.pressed and not event.echo and event.keycode == toggle_key:
+  if event is InputEventKey and event.pressed and not event.echo and event.is_action_pressed("toggle_replay_viewer"):
     if active:
       close()
     else:
