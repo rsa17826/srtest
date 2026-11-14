@@ -28,10 +28,15 @@ func _break_walls(world_pos: Vector3, radius: float) -> bool:
 
 # walls as they are after the first `count` explosions of `list`
 func set_walls(list: Array, count: int) -> void:
-  gridmap.tiles = base_tiles.duplicate()
   for i in count:
     _break_walls(list[i].pos, list[i].radius)
-  gridmap.rebuild()
+
+func removeDoors() -> void:
+  log.pp("asdasdasd")
+  var id := gridmap.mesh_library.find_item_by_name("door")
+  for cell in gridmap.tiles.keys():
+    if gridmap.tiles[cell].x == id:
+      gridmap.tiles.erase(cell)
 
 # restores every broken wall (full restart). Before any explosion there is nothing to restore.
 func reset_walls() -> void:
@@ -53,6 +58,11 @@ func _ready() -> void:
     return
   for area in spawn_areas(gridmap, "goal"):
     area.body_entered.connect(func(body): if body is Player: body.win(area))
+  for area in spawn_areas(gridmap, "lever"):
+    area.body_entered.connect(func(body): if body is Player:
+      removeDoors()
+      gridmap.rebuild()
+      )
   # for area in spawn_areas(gridmap, "cracked wall"):
   #   add_trigger(area, func(body): if body is Player: body.onTick.append(body.die))
   for area in spawn_areas(gridmap, "spiky ball"):
@@ -113,6 +123,7 @@ func _ready() -> void:
   sun.shadow_enabled = true
   sun.directional_shadow_max_distance = 60.0
   add_child(sun)
+  global.player.levelLoaded()
 func spawn_areas(grid: MergedGridMap, tile: String) -> Array[Area3D]:
   var id := grid.mesh_library.find_item_by_name(tile)
   assert(id != -1, "no tile named '%s' in the mesh library" % tile)

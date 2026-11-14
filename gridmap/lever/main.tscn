@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://c8al2pjx0t2ax"]
 
-[ext_resource type="ArrayMesh" uid="uid://bgf1adnu3f601" path="res://lever_combined.res" id="1_qwbgg"]
+[ext_resource type="ArrayMesh" uid="uid://bgf1adnu3f601" path="res://gridmap/lever/lever_combined.res" id="1_qwbgg"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_t2c14"]
 
@@ -9,8 +9,8 @@
 [node name="LeverCombined" type="MeshInstance3D" parent="." unique_id=1899713826]
 mesh = ExtResource("1_qwbgg")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="LeverCombined" unique_id=309447232]
+[node name="Area3D" type="Area3D" parent="LeverCombined" unique_id=1442873251]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="LeverCombined/StaticBody3D" unique_id=151750376]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="LeverCombined/Area3D" unique_id=151750376]
 shape = SubResource("BoxShape3D_t2c14")
 metadata/_edit_lock_ = true

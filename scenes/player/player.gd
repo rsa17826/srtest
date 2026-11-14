@@ -65,10 +65,10 @@ func getTileId(name):
 
 func _ready():
   assert(not -1 in hazard_ids, "hazard tile name missing from mesh library")
-  fullReset()
   if global.canCaptureMouse:
     Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
-
+func levelLoaded():
+  fullReset()
 func touching_hazard() -> bool:
   for i in get_slide_collision_count():
     var col := get_slide_collision(i)
@@ -139,7 +139,9 @@ func fullReset():
   for cp in global.level.checkpoints:
     cp.pane.remove_meta("collected")
     cp.pane.set_instance_shader_parameter("collected", 0)
+  global.level.gridmap.tiles = global.level.base_tiles.duplicate()
   global.level.reset_walls()
+  global.level.gridmap.rebuild()
   abort_recording()
 
 func _unhandled_input(event):
