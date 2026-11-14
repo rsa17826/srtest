@@ -11,10 +11,45 @@ var tweens: Array[Tween] = []
 
 var base_tiles: Dictionary = {} # gridmap.tiles as the level starts, set at the end of _ready
 # Everything that changes the gridmap during a run, in order. ReplayViewer replays this list to show the
-# walls and doors as they were at any frame:
-# [{"type": "explode", "pos": Vector3, "radius": float} | {"type": "lever"}]
+# walls, doors, levers and keys as they were at any frame:
+# [{"type": "explode", "pos": Vector3, "radius": float} | {"type": "lever", "id": int} | {"type": "key", "id": int}]
 var events: Array = []
 var totalKeys := 0
+
+# ---------------------------------------------------------------- keys
+
+# one per key box: {"node": MeshInstance3D, "shape": CollisionShape3D of its trigger, "taken": bool}
+var keys: Array = []
+
+# swaps the key tiles for standalone meshes (so each key can hide on its own) and hooks up touching them
+func setup_keys() -> void:
+  var areas := spawn_areas(gridmap, "key")
+  var nodes := replace_with_nodes(gridmap, "key")
+  for i in areas.size():
+    keys.append({"node": nodes[areas[i].get_meta("cell")], "shape": areas[i].get_child(0), "taken": false})
+    add_trigger(areas[i], func(body): if body is Player: body.onTick.append(collect_key.bind(i)))
+  totalKeys = keys.size()
+
+# a taken key is hidden and its trigger shape is off, so it can't be collected (or seen) again
+func _set_key_taken(i: int, taken: bool) -> void:
+  keys[i].taken = taken
+  keys[i].node.visible = not taken
+  keys[i].shape.disabled = taken
+
+func _sync_key_count() -> void:
+  var n := 0
+  for k in keys:
+    if k.taken: n += 1
+  global.player.keysCollected = n
+
+# touching a key. Runs from Player.onTick so the live game and the resimulation apply it at the same
+# point of a tick.
+func collect_key(i: int) -> void:
+  if keys[i].taken: return
+  events.append({"type": "key", "id": i})
+  _set_key_taken(i, true)
+  _sync_key_count()
+
 # Breaks breakable walls near a grenade explosion. Rebuilds immediately (not deferred) so the new
 # collision exists for the rest of this physics tick, which the resimulation relies on.
 func explode(world_pos: Vector3, radius: float) -> void:
@@ -91,18 +126,24 @@ func _break_walls(world_pos: Vector3, radius: float) -> bool:
 func _apply_event(e: Dictionary) -> void:
   if e.type == "explode":
     _break_walls(e.pos, e.radius)
+  elif e.type == "key":
+    _set_key_taken(e.id, true)
   else:
     assert(e.type == "lever", "unknown world event type '%s'" % e.type)
     removeDoors()
     _set_lever_lit(e.id, true)
 
-# walls, doors and levers as they are after the first `count` events of `list`, starting from the level's start
+# walls, doors, levers and keys as they are after the first `count` events of `list`, starting from the
+# level's start. Also sets player.keysCollected to match.
 func set_walls(list: Array, count: int) -> void:
   gridmap.tiles = base_tiles.duplicate()
   for i in levers.size():
     _set_lever_lit(i, false)
+  for i in keys.size():
+    _set_key_taken(i, false)
   for i in count:
     _apply_event(list[i])
+  _sync_key_count()
   gridmap.rebuild()
 
 func removeDoors() -> void:
@@ -132,14 +173,7 @@ func _ready() -> void:
   for area in spawn_areas(gridmap, "goal"):
     area.body_entered.connect(func(body): if body is Player: if global.player.keysCollected >= totalKeys: body.win(area))
   setup_levers()
-  for area in spawn_areas(gridmap, "key"):
-    totalKeys += 1
-    add_trigger(area, func(body): if body is Player:
-      body.keysCollected += 1
-      area.get_parent().visible=false
-      area.get_child(0).disabled=true
-      )
-  replace_with_nodes(gridmap, "lever")
+  setup_keys()
 
   for area in spawn_areas(gridmap, "spiky ball"):
     add_trigger(area, func(body): if body is Player: body.onTick.append(body.die))
