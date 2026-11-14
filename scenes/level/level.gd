@@ -9,6 +9,37 @@ var checkpoints: Array = []
 var triggers: Array = [] # [{"area": Area3D, "on_enter": Callable}], used by ReplayViewer
 var tweens: Array[Tween] = []
 
+const BREAKABLE_TILE := "cracked wall"
+const WALL_BREAK_RADIUS := 6.0 # how far from a grenade breakable walls are destroyed
+var base_tiles: Dictionary = {} # gridmap.tiles as the level starts, set at the end of _ready
+var explosions: Array = [] # [{"pos": Vector3, "radius": float}] in order, for the current run
+
+# Breaks breakable walls near a grenade explosion. Rebuilds immediately (not deferred) so the new
+# collision exists for the rest of this physics tick, which the resimulation relies on.
+func explode(world_pos: Vector3, radius: float) -> void:
+  explosions.append({"pos": world_pos, "radius": radius})
+  if _break_walls(world_pos, radius):
+    gridmap.rebuild()
+
+# true if any wall was erased. Does not rebuild.
+func _break_walls(world_pos: Vector3, radius: float) -> bool:
+  var id := gridmap.mesh_library.find_item_by_name(BREAKABLE_TILE)
+  assert(id != -1, "no tile named '%s' in the mesh library" % BREAKABLE_TILE)
+  return gridmap.erase_item_in_radius(id, gridmap.to_local(world_pos), minf(radius, WALL_BREAK_RADIUS))
+
+# walls as they are after the first `count` explosions of `list`
+func set_walls(list: Array, count: int) -> void:
+  gridmap.tiles = base_tiles.duplicate()
+  for i in count:
+    _break_walls(list[i].pos, list[i].radius)
+  gridmap.rebuild()
+
+# restores every broken wall (full restart). Before any explosion there is nothing to restore.
+func reset_walls() -> void:
+  if explosions.is_empty(): return
+  explosions.clear()
+  set_walls([], 0)
+
 func add_trigger(area: Area3D, on_enter: Callable) -> void:
   triggers.append({"area": area, "on_enter": on_enter})
   area.body_entered.connect(on_enter)
@@ -23,6 +54,8 @@ func _ready() -> void:
     return
   for area in spawn_areas(gridmap, "goal"):
     area.body_entered.connect(func(body): if body is Player: body.win(area))
+  # for area in spawn_areas(gridmap, "cracked wall"):
+  #   add_trigger(area, func(body): if body is Player: body.onTick.append(body.die))
   for area in spawn_areas(gridmap, "spiky ball"):
     add_trigger(area, func(body): if body is Player: body.onTick.append(body.die))
   # for area in spawn_areas(gridmap, "speed zone"):
@@ -34,6 +67,9 @@ func _ready() -> void:
     var pane: MeshInstance3D = cp_panes[area.get_meta("cell")]
     checkpoints.append({"area": area, "pane": pane})
     area.body_entered.connect(func(body): if body is Player: collect_checkpoint(pane))
+
+  gridmap.rebuild() # apply the cp erase above now, so base_tiles is final
+  base_tiles = gridmap.tiles.duplicate()
 
   var sky_mat := ProceduralSkyMaterial.new()
   sky_mat.sky_top_color = Color("#3d6fb5")

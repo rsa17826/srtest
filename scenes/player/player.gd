@@ -139,6 +139,7 @@ func fullReset():
   for cp in global.level.checkpoints:
     cp.pane.remove_meta("collected")
     cp.pane.set_instance_shader_parameter("collected", 0)
+  global.level.reset_walls()
   abort_recording()
 
 func _unhandled_input(event):
@@ -307,6 +308,7 @@ func tick_grenades(delta: float, explode: bool) -> void:
           velocity[axis] += boost[axis] # same direction (or at rest): stack
       var horizontal := Vector2(dir.x, dir.z).length()
       currentUserMoveSpeed += horizontal * GRENADE_BLAST_SPEED_BOOST * scale
+    global.level.explode(active_grenade.global_position, Grenade.BLAST_RADIUS)
     active_grenade.free()
     active_grenade = null
 

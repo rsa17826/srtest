@@ -69,6 +69,20 @@ func erase_items(item: int) -> void:
       tiles.erase(cell)
   _request_rebuild()
 
+# Erases every cell of `item` whose cube touches the sphere (center in this node's local space).
+# Does NOT rebuild: the caller calls rebuild() once after all its erasing. Returns true if anything was erased.
+func erase_item_in_radius(item: int, center: Vector3, radius: float) -> bool:
+  var half := cell_size * 0.5
+  var erased := false
+  for cell in tiles.keys():
+    if tiles[cell].x != item: continue
+    var c := map_to_local(cell)
+    var closest := c + (center - c).clamp(-half, half)
+    if closest.distance_to(center) <= radius:
+      tiles.erase(cell)
+      erased = true
+  return erased
+
 # ---------------------------------------------------------------- rebuild
 
 func _request_rebuild() -> void:

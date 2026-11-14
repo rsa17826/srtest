@@ -1,0 +1,39 @@
+[gd_scene format=3 uid="uid://g4q1rhrli1wy"]
+
+[ext_resource type="Script" uid="uid://clgmjyg3vyil1" path="res://gridmap/_/laser_enemy/laser_enemy.gd" id="1_ed5gw"]
+[ext_resource type="Shader" uid="uid://d04juk1o2sh2k" path="res://shaders/laser.gdshader" id="2_ed5gw"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ed5gw"]
+render_priority = 0
+shader = ExtResource("2_ed5gw")
+shader_parameter/color = Color(1, 0.1, 0.15, 1)
+shader_parameter/core_color = Color(0.5445969, 0.27252507, 0.5376283, 1)
+shader_parameter/intensity = 1.19600005681
+shader_parameter/core_sharpness = 5.0
+shader_parameter/halo_falloff = 1.6
+shader_parameter/length_units = 10.0
+shader_parameter/pulse_speed = 14.0
+shader_parameter/pulse_spacing = 1.5
+shader_parameter/pulse_strength = 0.7
+shader_parameter/flicker = 0.15
+shader_parameter/power = 1.0
+shader_parameter/fade_end_units = 0.6
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_y2w2i"]
+material = SubResource("ShaderMaterial_ed5gw")
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_lvxji"]
+
+[node name="root" type="Node3D" unique_id=818926986]
+script = ExtResource("1_ed5gw")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1224317292]
+mesh = SubResource("CylinderMesh_y2w2i")
+metadata/_edit_lock_ = true
+
+[node name="Area3D" type="Area3D" parent="MeshInstance3D" unique_id=212031447]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshInstance3D/Area3D" unique_id=151750376]
+visible = false
+shape = SubResource("SphereShape3D_lvxji")
+metadata/_edit_lock_ = true

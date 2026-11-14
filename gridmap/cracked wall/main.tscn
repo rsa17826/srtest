@@ -1,0 +1,55 @@
+[gd_scene format=3 uid="uid://dg48gt6yeqjl3"]
+
+[ext_resource type="Shader" uid="uid://cauwhkcmtwcy6" path="res://shaders/main.gdshader" id="1_lbe5m"]
+[ext_resource type="Shader" uid="uid://vcrw4cb7cb5b" path="res://shaders/cracks.gdshader" id="1_p36bn"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_k4a5s"]
+render_priority = 0
+shader = ExtResource("1_p36bn")
+shader_parameter/color = Color(0.51847154, 0.002805445, 0.8273257, 1)
+shader_parameter/intensity = 6.0
+shader_parameter/glow_width = 0.06
+shader_parameter/crack_width = 0.016
+shader_parameter/flicker = 0.25
+shader_parameter/scale = 1.6
+shader_parameter/warp = 0.35
+shader_parameter/seed = 0.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_5681r"]
+render_priority = 0
+next_pass = SubResource("ShaderMaterial_k4a5s")
+shader = ExtResource("1_lbe5m")
+shader_parameter/base_color = Color(8.338652e-06, 0.067108035, 0.2664409, 1)
+shader_parameter/line_color = Color(0.44515145, 0.6266843, 1, 1)
+shader_parameter/cell_size = 1.0
+shader_parameter/line_width = 0.03
+shader_parameter/emission_strength = 1.5
+shader_parameter/move_color = Color(3.5087316e-05, 0.09759768, 0.36068362, 1)
+shader_parameter/move_dir = Vector2(0.5, 1)
+shader_parameter/move_speed = 0.5
+shader_parameter/move_spacing = 0.5
+shader_parameter/move_width = 0.015
+shader_parameter/move_emission = 2.0
+shader_parameter/spike_size = 0.2
+shader_parameter/spike_height = 0.12
+shader_parameter/spike_width = 0.25
+shader_parameter/spike_speed = 1.0
+shader_parameter/spike_pulse = 0.5
+shader_parameter/spike_randomness = 0.5
+
+[sub_resource type="BoxMesh" id="BoxMesh_p36bn"]
+material = SubResource("ShaderMaterial_5681r")
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_fqn82"]
+
+[node name="root" type="Node3D" unique_id=818926986]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1224317292]
+mesh = SubResource("BoxMesh_p36bn")
+metadata/_edit_lock_ = true
+
+[node name="StaticBody3D2" type="StaticBody3D" parent="MeshInstance3D" unique_id=1296955096]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshInstance3D/StaticBody3D2" unique_id=151750376]
+shape = SubResource("BoxShape3D_fqn82")
+metadata/_edit_lock_ = true
