@@ -9,8 +9,6 @@ var checkpoints: Array = []
 var triggers: Array = [] # [{"area": Area3D, "on_enter": Callable}], used by ReplayViewer
 var tweens: Array[Tween] = []
 
-const BREAKABLE_TILE := "cracked wall"
-const WALL_BREAK_RADIUS := 6.0 # how far from a grenade breakable walls are destroyed
 var base_tiles: Dictionary = {} # gridmap.tiles as the level starts, set at the end of _ready
 var explosions: Array = [] # [{"pos": Vector3, "radius": float}] in order, for the current run
 
@@ -23,9 +21,10 @@ func explode(world_pos: Vector3, radius: float) -> void:
 
 # true if any wall was erased. Does not rebuild.
 func _break_walls(world_pos: Vector3, radius: float) -> bool:
+  const BREAKABLE_TILE := "cracked wall"
   var id := gridmap.mesh_library.find_item_by_name(BREAKABLE_TILE)
   assert(id != -1, "no tile named '%s' in the mesh library" % BREAKABLE_TILE)
-  return gridmap.erase_item_in_radius(id, gridmap.to_local(world_pos), minf(radius, WALL_BREAK_RADIUS))
+  return gridmap.erase_item_in_radius(id, gridmap.to_local(world_pos), 2)
 
 # walls as they are after the first `count` explosions of `list`
 func set_walls(list: Array, count: int) -> void:
