@@ -278,8 +278,9 @@ func run_on_tick() -> void:
 func spawnGrenade() -> void:
   var g: Grenade = preload("res://scenes/grenade/main.tscn").instantiate()
   get_parent().add_child(g)
-  g.global_position = $cam.global_position
   g.velocity = -$cam.global_transform.basis.z * Grenade.THROW_SPEED + velocity
+  var forward: Vector3 = -$cam.global_transform.basis.z
+  g.global_position = $cam.global_position + (Vector3.ONE * forward)
   g.add_collision_exception_with(self)
   g.predict_fuse_ticks(1.0 / 60.0, [get_rid()])
   active_grenade = g

@@ -66,7 +66,7 @@ func explode(world_pos: Vector3) -> void:
 # ---------------------------------------------------------------- levers
 
 const LEVER_COLOR := Color("9c0038") # shader_parameter/color of both surfaces once pulled
-const LEVER_HIT_RADIUS := 2.0 # a grenade exploding this close to a lever pulls it
+const LEVER_HIT_RADIUS := 5.0
 # one per lever box: {"aabb": AABB (gridmap space), "mats": [surface 0 / 1 materials, private copies],
 # "orig": [their original color], "lit": bool}
 var levers: Array = []
