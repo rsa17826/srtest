@@ -54,7 +54,7 @@ static func save(level: String, buffer: Array) -> String:
       var v = frame[k]
       o[k] = [v.x, v.y, v.z] if k in VEC3_KEYS else ([v.x, v.y] if k in VEC2_KEYS else v)
     frames.append(o)
-  var path := dir + "/" + stamp + " - " + str(len(frames)) + ".json"
+  var path := dir + "/" + stamp + " - " + str(len(frames)) + " " + (global.timer.format(global.player.tickCount * 1 / 60.0)) + ".json"
   var file := FileAccess.open(path, FileAccess.WRITE)
   assert(file != null, "can't write %s (error %d)" % [path, FileAccess.get_open_error()])
   file.store_string(JSON.stringify({"level": level, "frames": frames}))
